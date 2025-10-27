@@ -54,8 +54,8 @@ $ style
 
 ### Features
 
-+ 90 popular color-schemes.
-+ 20 powerline & some Nerd patched fonts.
++ 500+ color-schemes.
++ 20 Nerd patched fonts and more.
 + Randomly change color-schemes.
 + Download font from [NerdFont repo](https://github.com/ryanoasis/nerd-fonts).
 + Import color-schemes from *local file* or *file URL*.
@@ -70,6 +70,8 @@ $ style
     35) InconsolataGo
     ...
     q) type q to quit
+    
+    [Select Option]: eg: 34
 
     [*] Reloading Settings...
     [*] Applied Successfully.
@@ -77,7 +79,7 @@ $ style
 
 To install fonts using the menu:
 - All fonts are loaded on terminal so you can pick any font you want
-- Choose one or more fonts (by index/number) to install
+- Choose one or more fonts *(by index/number)* to install
 - Hit Return/Enter to install the selected fonts
 - Type 'q' to quit
 - The full list of font are [here](all_font.txt)

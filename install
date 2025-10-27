@@ -61,12 +61,9 @@ prerequisite() {
 install_style () {
 	echo "    ${BLUE}[${RED}*${BLUE}] ${ORANGE}Installing termux-style..."
 	# Delete old files
-	if [[ (-L $PREFIX/bin/termux-style) && (-d $PREFIX/share/termux-style) ]]; then
-		echo "    ${BLUE}[${RED}*${BLUE}] ${RED}Deleting files from previous installation..."${BLUE}
-		{ rm -r $PREFIX/bin/termux-style $PREFIX/share/termux-style; echo; }
-	elif [[ (-L $PREFIX/bin/style) && (-d $TERMUX_DIR/colors) && (-d $TERMUX_DIR/fonts) ]]; then
+	if [[ (-L $PREFIX/bin/style) && (-d $TERMUX_DIR/colors) && (-d $TERMUX_DIR/fonts) ]]; then
 	    echo "    ${BLUE}[${RED}*${BLUE}] ${RED}Deleting files from previous installation..."${BLUE}
-		{ rm -r $PREFIX/bin/style $TERMUX_DIR/colors TERMUX_DIR/fonts; echo; }
+		{ rm -rf $PREFIX/bin/style $TERMUX_DIR/colors TERMUX_DIR/fonts; echo; }
 	fi
 	# Copying files
 	{ echo "    ${BLUE}[${RED}*${BLUE}] ${ORANGE}Copying files in ${GREEN}$PREFIX/share ${ORANGE}directory..."${BLUE}; }

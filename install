@@ -61,18 +61,18 @@ prerequisite() {
 install_style () {
 	echo "    ${BLUE}[${RED}*${BLUE}] ${ORANGE}Installing termux-style..."
 	# Delete old files
-	if [[ (-L $PREFIX/bin/style) && (-d $TERMUX_DIR/colors) && (-d $TERMUX_DIR/fonts) ]]; then
+	if [[ (-f $PREFIX/bin/style) && (-d $TERMUX_DIR/colors) && (-d $TERMUX_DIR/fonts) ]]; then
 	    echo "    ${BLUE}[${RED}*${BLUE}] ${RED}Deleting files from previous installation..."${BLUE}
 		{ rm -rf $PREFIX/bin/style $TERMUX_DIR/colors TERMUX_DIR/fonts; echo; }
 	fi
 	# Copying files
-	{ echo "    ${BLUE}[${RED}*${BLUE}] ${ORANGE}Copying files in ${GREEN}$PREFIX/share ${ORANGE}directory..."${BLUE}; }
-	{ mkdir $TERMUX_DIR/colors; mkdir $TERMUX_DIR/fonts; cp -r $DIR/colors $TERMUX_DIR/colors; cp -r $DIR/fonts $TERMUX_DIR/fonts; cp -r $DIR/style $PREFIX/bin; }
+	{ echo "    ${BLUE}[${RED}*${BLUE}] ${ORANGE}Copying files in ${GREEN}destination ${ORANGE}directory..."${BLUE}; }
+	{ mkdir -p $TERMUX_DIR/colors; mkdir -p $TERMUX_DIR/fonts; cp -r $DIR/colors $TERMUX_DIR; cp -r $DIR/fonts $TERMUX_DIR; cp -r $DIR/style $PREFIX/bin; }
 	{ chmod +x $PREFIX/bin/style; }
 	# Verify files 
-	if [[ (-L $PREFIX/bin/style) && (-d $TERMUX_DIR/colors) && (-d $TERMUX_DIR/fonts) ]]; then
+	if [[ (-f $PREFIX/bin/style) && (-d $TERMUX_DIR/colors) && (-d $TERMUX_DIR/fonts) ]]; then
 		{ echo; echo "    ${BLUE}[${RED}*${BLUE}] ${GREEN}Successfully Installed."; }
-		{ echo "    ${BLUE}[${RED}*${BLUE}] ${GREEN}Now you can Run this Program by just typing ${MAGENTA}style${GREEN}."; echo; }
+		{ echo "    ${BLUE}[${RED}*${BLUE}] ${GREEN}Now you can Run this Program by just typing ${ORANGE}style${GREEN}."; echo; }
 		{ reset_color; exit 0; }
 	else
 		{ echo "    ${BLUE}[${RED}!${BLUE}] ${RED}Error Occured."; echo; reset_color; exit 1; }
@@ -84,9 +84,9 @@ main () {
 	banner
 	prerequisite
 	# Check for previous installation
-	if [[ (-L $PREFIX/bin/style) && (-d $TERMUX_DIR/colors) && (-d $TERMUX_DIR/fonts) ]]; then
-		{ echo; echo "    ${BLUE}[${RED}!${BLUE}] ${MAGENTA}termux-style ${GREEN}is already installed."; }
-		{ read -p "    ${BLUE}[${RED}?${BLUE}] ${ORANGE}Do you wanna re-install it? (y/n): ${GREEN}"; echo; }
+	if [[ (-f $PREFIX/bin/style) && (-d $TERMUX_DIR/colors) && (-d $TERMUX_DIR/fonts) ]]; then
+		{ echo; echo "    ${BLUE}[${RED}!${BLUE}] ${ORANGE}termux-style ${GREEN}is already installed."; }
+		{ read -p "    ${BLUE}[${RED}?${BLUE}] ${ORANGE}Do you wanna re-install it? ${GREEN}(y/n): ${GREEN}"; echo; }
 		if [[ "$REPLY" =~ ^[y/Y]$ ]]; then
 			install_style
 		else

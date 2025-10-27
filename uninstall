@@ -48,12 +48,12 @@ reset_color() {
 ## Check for previous installation
 uninstall_style () {
 	banner
-	if [[ (-L $PREFIX/bin/style) ]]; then
+	if [[ (-f $PREFIX/bin/style) ]]; then
 		{ echo; echo "    ${BLUE}[${RED}*${BLUE}] ${ORANGE}Uninstalling termux-style..."; echo; }
 		{ echo "    ${BLUE}[${RED}*${BLUE}] ${RED}Your downloaded font and scheme are left intact."${BLUE}; }
-		{ rm -r $PREFIX/bin/style; }
+		{ rm $PREFIX/bin/style; }
 		# Verify files
-		if [[ (! -L $PREFIX/bin/style) ]]; then
+		if [[ (! -f $PREFIX/bin/style) ]]; then
 			{ echo; echo "    ${BLUE}[${RED}*${BLUE}] ${GREEN}Uninstalled Successfully."; echo; }
 			{ reset_color; exit 0; }
 		else

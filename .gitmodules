@@ -1,0 +1,3 @@
+[submodule "colorscheme"]
+	path = colorscheme
+	url = git@github.com:ddCeka/colorscheme.git

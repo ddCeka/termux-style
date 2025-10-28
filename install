@@ -2,6 +2,12 @@
 
 ## termux-style installer script
 
+# To check if Termux is being used
+if [ $(ps -ef| grep -c com.termux) -eq 0 ]; then
+	echo "please make sure that you are using termux, this script is only made for termux"
+	exit 0
+fi
+
 ## ANSI Colors (FG & BG)
 RED="$(printf '\033[31m')"  GREEN="$(printf '\033[32m')"  ORANGE="$(printf '\033[33m')"  BLUE="$(printf '\033[34m')"
 MAGENTA="$(printf '\033[35m')"  CYAN="$(printf '\033[36m')"  WHITE="$(printf '\033[37m')" BLACK="$(printf '\033[30m')"

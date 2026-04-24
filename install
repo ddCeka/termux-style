@@ -3,7 +3,7 @@
 ## termux-style installer script
 
 # To check if Termux is being used
-if [ $(ps -ef| grep -c com.termux) -eq 0 ]; then
+if [ "$(pgrep -c com.termux)" -eq 0 ]; then
 	echo "please make sure that you are using termux, this script is only made for termux"
 	exit 0
 fi

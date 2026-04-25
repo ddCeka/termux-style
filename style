@@ -110,7 +110,7 @@ apply_colors () {
         { reload_settings; reset_color; return; }
     else
         echo -n "    ${BLUE}[${RED}!${BLUE}] ${RED}Back to menu."
-        { echo; break; }
+        { echo; return; }
     fi
     return
 }
@@ -138,7 +138,7 @@ apply_fonts () {
         { reload_settings; reset_color; return; }
     else
         echo -n "    ${BLUE}[${RED}!${BLUE}] ${RED}Back to menu."
-        { reset_color; echo; break; }
+        { reset_color; echo; return; }
     fi
     return
 }
@@ -548,14 +548,14 @@ import_files () {
         fi
     else
         echo -n "    ${BLUE}[${RED}!${BLUE}] ${RED}Back to menu."
-        { reset_color; echo; break; }
+        { reset_color; echo; return; }
     fi
 }
 
 ## Main menu
 until [[ "$REPLY" =~ ^[q/Q]$ ]]; do
-	active_color=`readlink $TERMUX_DIR/colors.properties`
-	active_font=`readlink $TERMUX_DIR/font.ttf`
+	active_color=`readlink $TERMUX_DIR/colors.properties | grep -o -E -e '(/[^/]+){2}$'`
+	active_font=`readlink $TERMUX_DIR/font.ttf | grep -o -E -e '(/[^/]+){2}$'`
     banner
     echo "
     ${BLUE}[${RED}C${BLUE}] ${GREEN}Colors ($total_colors) (${CYAN}${active_color%.*}${GREEN})
@@ -584,4 +584,4 @@ until [[ "$REPLY" =~ ^[q/Q]$ ]]; do
         echo -n "    ${BLUE}[${RED}!${BLUE}] ${RED}Invalid Option, Try Again."
     fi
 done
-{ echo "    ${BLUE}[${RED}*${BLUE}] ${RED}Bye Bye, Have A Nice Day!"; echo; reset_color; exit 0; }
+{ echo "    ${BLUE}[${RED}*${BLUE}] ${RED}Bye Bye, Have A Nice Day!"; echo; reset_color; clear; exit 0; }

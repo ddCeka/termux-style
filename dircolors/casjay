@@ -1,0 +1,261 @@
+# Configuration file for the 256color ls utility
+
+# This file goes in the /etc directory, and must be world readable.
+# You can copy this file to .dir_colors in your $HOME directory to override
+# the system defaults.
+
+# Configuration file for dircolors, a utility to help you set the
+# LS_COLORS environment variable used by GNU ls with the --color option.
+
+# Copyright (C) 1996-2019 Free Software Foundation, Inc.
+# Copying and distribution of this file, with or without modification,
+# are permitted provided the copyright notice and this notice are preserved.
+
+# The keywords COLOR, OPTIONS, and EIGHTBIT (honored by the
+# slackware version of dircolors) are recognized but ignored.
+
+# For compatibility, the pattern "^COLOR.*none" is recognized as a way to
+# disable colorization.  See https://bugzilla.redhat.com/1349579 for details.
+
+# Below are TERM entries, which can be a glob patterns, to match
+# against the TERM environment variable to determine if it is colorizable.
+TERM Eterm
+TERM ansi
+TERM color-xterm
+TERM con132x25
+TERM con132x30
+TERM con132x43
+TERM con132x60
+TERM con80x25
+TERM con80x28
+TERM con80x30
+TERM con80x43
+TERM con80x50
+TERM con80x60
+TERM cons25
+TERM console
+TERM cygwin
+TERM dtterm
+TERM eterm-color
+TERM gnome
+TERM gnome-256color
+TERM jfbterm
+TERM konsole
+TERM kterm
+TERM linux
+TERM linux-c
+TERM mach-color
+TERM mlterm
+TERM putty
+TERM rxvt
+TERM rxvt-256color
+TERM rxvt-cygwin
+TERM rxvt-cygwin-native
+TERM rxvt-unicode
+TERM rxvt-unicode-256color
+TERM rxvt-unicode256
+TERM screen
+TERM screen-256color
+TERM screen-256color-bce
+TERM screen-bce
+TERM screen-w
+TERM screen.Eterm
+TERM screen.rxvt
+TERM screen.linux
+TERM st
+TERM st-256color
+TERM terminator
+TERM vt100
+TERM xterm
+TERM xterm-16color
+TERM xterm-256color
+TERM xterm-88color
+TERM xterm-color
+TERM xterm-debian
+
+# Below are the color init strings for the basic file types.
+# One can use codes for 256 or more colors supported by modern terminals.
+# The default color codes use the capabilities of an 8 color terminal
+# with some additional attributes as per the following codes:
+# Attribute codes:
+# 00=none 01=bold 04=underscore 05=blink 07=reverse 08=concealed
+# Text color codes:
+# 30=black 31=red 32=green 33=yellow 34=blue 35=magenta 36=cyan 37=white
+# Background color codes:
+# 40=black 41=red 42=green 43=yellow 44=blue 45=magenta 46=cyan 47=white
+# Text color(256 colors mode) codes:
+# Valid syntax for text 256color is 38;5;<color number> , where color number
+# is number between 0 and 255.
+# You may find following command useful to search the best one for you:
+# for ((x=0; x<=255; x++));do echo -e "${x}:\033[38;5;${x}mcolor\033[000m";done
+# Background color(256 colors mode) codes:
+# Valid syntax for background 256color is 48;5;<color number> , where
+# color number is number between 0 and 255.
+# You may find following command useful to search the best one for you:
+# for ((x=0; x<=255; x++));do echo -e "${x}:\033[48;5;${x}mcolor\033[000m";done
+
+RESET                 0 # reset to "normal" color
+NORMAL                01;34
+FILE                  16;33
+DIR                   38;5;37;1 # directory
+LINK                  01;37;45 # symbolic link.
+FIFO                  40;38;5;12 # pipe
+SOCK                  38;5;13;14 # socket
+DOOR                  38;5;25;15 # door
+BLK                   48;5;232;38;5;11 # block device driver
+CHR                   48;5;232;38;533 # character device driver
+ORPHAN                48;5;232;38;5;9 # symlink to nonexistent file, or non-stat'able file ...
+MISSING               31;38;232;1 # ... and the files they point to
+SETUID                48;5;196;38;5;15 # file that is setuid (u+s)
+SETGID                48;5;11;38;5;16 # file that is setgid (g+s)
+CAPABILITY            48;5;196;38;5;226 # file with capability
+STICKY_OTHER_WRITABLE 48;5;10;38;5;16 # dir that is sticky and other-writable (+t,o+w)
+OTHER_WRITABLE        48;5;10;38;5;21 # dir that is other-writable (o+w) and not sticky
+STICKY                48;5;21;38;5;15 # dir with the sticky bit set (+t) and not other-writable
+
+# This is for files with execute permission:
+EXEC 38;5;40
+
+# List any file extensions like '.gz' or '.tar' that you would like ls
+# to colorize below. Put the extension, a space, and the color init string.
+# (and any comments you want to add after a '#')
+
+# CD 48;5;230;38;5;244;01
+
+# If you use DOS-style suffixes, you may want to uncomment the following:
+.cmd 01;32 # executables (bright green)
+.exe 01;32
+.com 01;32
+.btm 01;32
+.bat 01;32
+# Or if you want to colorize scripts even if they do not have the
+# executable bit actually set.
+.sh  01;32
+.csh 01;32
+
+# archives or compressed (bright red)
+.gz   01;36
+.tar  01;36
+.tgz  01;36
+.arc  01;36
+.arj  01;36
+.taz  01;36
+.lha  01;36
+.lz4  01;36
+.lzh  01;36
+.lzma 01;36
+.tlz  01;36
+.txz  01;36
+.tzo  01;36
+.t7z  01;36
+.zip  01;36
+.z    01;36
+.dz   01;36
+.gz   01;36
+.lrz  01;36
+.lz   01;36
+.lzo  01;36
+.xz   01;36
+.zst  01;36
+.tzst 01;36
+.bz2  01;36
+.bz   01;36
+.tbz  01;36
+.tbz2 01;36
+.tz   01;36
+.deb  01;36
+.rpm  01;36
+.jar  01;36
+.war  01;36
+.ear  01;36
+.sar  01;36
+.rar  01;36
+.alz  01;36
+.ace  01;36
+.zoo  01;36
+.cpio 01;36
+.7z   01;36
+.rz   01;36
+.cab  01;36
+.wim  01;36
+.swm  01;36
+.dwm  01;36
+.esd  01;36
+
+# image formats
+.jpg   38;5;13
+.jpeg  38;5;13
+.mjpg  38;5;13
+.mjpeg 38;5;13
+.gif   38;5;13
+.bmp   38;5;13
+.pbm   38;5;13
+.pgm   38;5;13
+.ppm   38;5;13
+.tga   38;5;13
+.xbm   38;5;13
+.xpm   38;5;13
+.tif   38;5;13
+.tiff  38;5;13
+.png   38;5;13
+.svg   38;5;13
+.svgz  38;5;13
+.mng   38;5;13
+.pcx   38;5;13
+.mov   38;5;13
+.mpg   38;5;13
+.mpeg  38;5;13
+.m2v   38;5;13
+.mkv   38;5;13
+.webm  38;5;13
+.ogm   38;5;13
+.mp4   38;5;13
+.m4v   38;5;13
+.mp4v  38;5;13
+.vob   38;5;13
+.qt    38;5;13
+.nuv   38;5;13
+.wmv   38;5;13
+.asf   38;5;13
+.rm    38;5;13
+.rmvb  38;5;13
+.flc   38;5;13
+.avi   38;5;13
+.fli   38;5;13
+.flv   38;5;13
+.gl    38;5;13
+.dl    38;5;13
+.xcf   38;5;13
+.xwd   38;5;13
+.yuv   38;5;13
+.cgm   38;5;13
+.emf   38;5;13
+
+# https://wiki.xiph.org/MIME_Types_and_File_Extensions
+.ogv 38;5;13
+.ogx 38;5;13
+
+# audio formats
+.aac  38;5;45
+.au   38;5;45
+.flac 38;5;45
+.m4a  38;5;45
+.mid  38;5;45
+.midi 38;5;45
+.mka  38;5;45
+.mp3  38;5;45
+.mpc  38;5;45
+.ogg  38;5;45
+.ra   38;5;45
+.wav  38;5;45
+
+# https://wiki.xiph.org/MIME_Types_and_File_Extensions
+.oga  38;5;45
+.opus 38;5;45
+.spx  38;5;45
+.xspf 38;5;45
+
+*README     31
+*README.txt 31
+
+# vim: ft=dircolors:fdm=marker:et:sw=2:

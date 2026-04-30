@@ -1,0 +1,284 @@
+# --------------------------------------------------------------------------- #
+# - Configuration file for dircolors, a utility to help you set the --------- #
+# - LS_COLORS environment variable used by GNU ls with the --color option. -- #
+# --------------------------------------------------------------------------- #
+COLORTERM ?*
+TERM Eterm
+TERM ansi
+TERM *color*
+TERM con[0-9]*x[0-9]*
+TERM cons25
+TERM console
+TERM cygwin
+TERM *direct*
+TERM dtterm
+TERM gnome
+TERM hurd
+TERM jfbterm
+TERM konsole
+TERM kterm
+TERM linux
+TERM linux-c
+TERM mlterm
+TERM putty
+TERM rxvt*
+TERM screen*
+TERM st
+TERM terminator
+TERM tmux*
+TERM vt100
+TERM xterm*
+# ===================================================================
+# Basic file attributes
+# ===================================================================
+# Below are the color init strings for the basic file types.
+# One can use codes for 256 or more colors supported by modern terminals.
+# The default color codes use the capabilities of an 8 color terminal
+# with some additional attributes as per the following codes:
+# Attribute codes:
+# 00=none 01=bold 04=underscore 05=blink 07=reverse 08=concealed
+# Text color codes:
+# 30=black 31=red 32=green 33=yellow 34=blue 35=magenta 36=cyan 37=white
+# Background color codes:
+# 40=black 41=red 42=green 43=yellow 44=blue 45=magenta 46=cyan 47=white
+#NORMAL 00 # no color code at all
+#FILE 00 # regular file: use no color at all
+RESET 0 # reset to "normal" color
+DIR 38;2;0;200;230;1   # directory
+LINK 01;36 # symbolic link. (If you set this to 'target' instead of a
+ # numerical value, the color is as for the file pointed to.)
+MULTIHARDLINK 00 # regular file with more than one link
+FIFO 40;33 # pipe
+SOCK 01;35 # socket
+DOOR 01;35 # door
+BLK 40;33;01 # block device driver
+CHR 40;33;01 # character device driver
+ORPHAN 40;31;01 # symlink to nonexistent file, or non-stat'able file ...
+MISSING 00 # ... and the files they point to
+SETUID 37;41 # file that is setuid (u+s)
+SETGID 30;43 # file that is setgid (g+s)
+CAPABILITY 00 # file with capability (very expensive to lookup)
+STICKY_OTHER_WRITABLE 30;42 # dir that is sticky and other-writable (+t,o+w)
+OTHER_WRITABLE 34;42 # dir that is other-writable (o+w) and not sticky
+STICKY 37;44 # dir with the sticky bit set (+t) and not other-writable
+# This is for files with execute permission:
+EXEC 01;32
+# ===================================================================
+# File extension attributes
+# ===================================================================
+# List any file extensions like '.gz' or '.tar' that you would like ls
+# to color below. Put the suffix, a space, and the color init string.
+# (and any comments you want to add after a '#').
+# Suffixes are matched case insensitively, but if you define different
+# init strings for separate cases, those will be honored.
+#
+# If you use DOS-style suffixes, you may want to uncomment the following:
+#.cmd 01;32 # executables (bright green)
+#.exe 01;32
+#.com 01;32
+#.btm 01;32
+#.bat 01;32
+# Or if you want to color scripts even if they do not have the
+# executable bit actually set.
+#.sh 01;32
+#.csh 01;32
+# archives or compressed (bright red)
+.tar 38;2;0;200;230
+.tgz 38;2;0;200;230
+.arc 38;2;0;200;230
+.arj 38;2;0;200;230
+.taz 38;2;0;200;230
+.lha 38;2;0;200;230
+.lz4 38;2;0;200;230
+.lzh 38;2;0;200;230
+.lzma 38;2;0;200;230
+.tlz 38;2;0;200;230
+.txz 38;2;0;200;230
+.tzo 38;2;0;200;230
+.t7z 38;2;0;200;230
+.zip 38;2;0;200;230
+.z 38;2;0;200;230
+.dz 38;2;0;200;230
+.gz 38;2;0;200;230
+.lrz 38;2;0;200;230
+.lz 38;2;0;200;230
+.lzo 38;2;0;200;230
+.xz 38;2;0;200;230
+.zst 38;2;0;200;230
+.tzst 38;2;0;200;230
+.bz2 38;2;0;200;230
+.bz 38;2;0;200;230
+.tbz 38;2;0;200;230
+.tbz2 38;2;0;200;230
+.tz 38;2;0;200;230
+.deb 38;2;0;200;230
+.rpm 38;2;0;200;230
+.jar 38;2;0;200;230
+.war 38;2;0;200;230
+.ear 38;2;0;200;230
+.sar 38;2;0;200;230
+.rar 38;2;0;200;230
+.alz 38;2;0;200;230
+.ace 38;2;0;200;230
+.zoo 38;2;0;200;230
+.cpio 38;2;0;200;230
+.7z 38;2;0;200;230
+.rz 38;2;0;200;230
+.cab 38;2;0;200;230
+.wim 38;2;0;200;230
+.swm 38;2;0;200;230
+.dwm 38;2;0;200;230
+.esd 38;2;0;200;230
+# image formats
+.avif 38;2;30;100;130
+.jpg 38;2;30;100;130
+.jpeg 38;2;30;100;130
+.mjpg 38;2;30;100;130
+.mjpeg 38;2;30;100;130
+.gif 38;2;30;100;130
+.bmp 38;2;30;100;130
+.pbm 38;2;30;100;130
+.pgm 38;2;30;100;130
+.ppm 38;2;30;100;130
+.tga 38;2;30;100;130
+.xbm 38;2;30;100;130
+.xpm 38;2;30;100;130
+.tif 38;2;30;100;130
+.tiff 38;2;30;100;130
+.png 38;2;30;100;130
+.svg 38;2;30;100;130
+.svgz 38;2;30;100;130
+.mng 38;2;30;100;130
+.pcx 38;2;30;100;130
+.mov 38;2;30;100;130
+.mpg 38;2;30;100;130
+.mpeg 38;2;30;100;130
+.m2v 38;2;30;100;130
+.mkv 38;2;30;100;130
+.webm 38;2;30;100;130
+.webp 38;2;30;100;130
+.ogm 38;2;30;100;130
+.mp4 38;2;30;100;130
+.m4v 38;2;30;100;130
+.mp4v 38;2;30;100;130
+.vob 38;2;30;100;130
+.qt 38;2;30;100;130
+.nuv 38;2;30;100;130
+.wmv 38;2;30;100;130
+.asf 38;2;30;100;130
+.rm 38;2;30;100;130
+.rmvb 38;2;30;100;130
+.flc 38;2;30;100;130
+.avi 38;2;30;100;130
+.fli 38;2;30;100;130
+.flv 38;2;30;100;130
+.gl 38;2;30;100;130
+.dl 38;2;30;100;130
+.xcf 38;2;30;100;130
+.xwd 38;2;30;100;130
+.yuv 38;2;30;100;130
+.cgm 38;2;30;100;130
+.emf 38;2;30;100;130
+# https://wiki.xiph.org/MIME_Types_and_File_Extensions
+.ogv 01;35
+.ogx 01;35
+# audio formats
+.aac 38;2;130;220;250
+.au 38;2;130;220;250
+.flac 38;2;130;220;250
+.m4a 38;2;130;220;250
+.mid 38;2;130;220;250
+.midi 38;2;130;220;250
+.mka 38;2;130;220;250
+.mp3 38;2;130;220;250
+.mpc 38;2;130;220;250
+.ogg 38;2;130;220;250
+.ra 38;2;130;220;250
+.wav 38;2;130;220;250
+# https://wiki.xiph.org/MIME_Types_and_File_Extensions
+.oga 00;36
+.opus 00;36
+.spx 00;36
+.xspf 00;36
+# backup files
+*~ 00;90
+*# 00;90
+.bak 00;90
+.crdownload 00;90
+.dpkg-dist 00;90
+.dpkg-new 00;90
+.dpkg-old 00;90
+.dpkg-tmp 00;90
+.old 00;90
+.orig 00;90
+.part 00;90
+.rej 00;90
+.rpmnew 00;90
+.rpmorig 00;90
+.rpmsave 00;90
+.swp 00;90
+.tmp 00;90
+.ucf-dist 00;90
+.ucf-new 00;90
+.ucf-old 00;90
+#
+# Subsequent TERM or COLORTERM entries, can be used to add / override
+# config specific to those matching environment variables.
+
+# ----------------------- #
+# -- RK Configurations -- #
+# ----------------------- #
+# -- Code
+# - Script
+.sh             38;2;220;220;30
+# - C
+.cpp            38;2;130;140;210
+.hpp            38;2;130;200;250
+.c              38;2;130;140;210
+.h              38;2;130;200;250
+# - Python
+.py             38;2;230;200;130
+.pyx            38;2;230;200;130
+.pyc            38;2;230;200;130
+# - Texts
+.md             38;2;255;240;133
+.txt            38;2;205;100;150
+.marks          38;2;205;100;150
+.html           38;2;205;100;150
+.yaml           38;2;180;80;130
+.xml            38;2;180;80;130
+.cf             38;2;180;80;130
+.cfg            38;2;180;80;130
+.names          38;2;180;80;130
+# - JS
+.ts             38;2;235;91;0
+.js             38;2;235;91;0
+# - Digital and Electronics
+.vhdl           38;2;20;120;90
+.vcd            38;2;20;120;90
+.vvp            38;2;20;120;90
+.v              38;2;20;120;90
+# -- Documents
+.pdf            38;2;127;254;230
+.docx           38;2;127;254;230
+.xlsx           38;2;80;254;80
+.csv            38;2;80;254;80
+# -- 3D
+.glb            38;2;159;179;223
+.blend          38;2;159;179;223
+# - Builds
+.o              38;2;20;90;90
+.so             38;2;20;110;110
+.make           38;2;20;90;90
+.cmake          38;2;20;90;90
+.check_cache    38;2;20;90;90
+# - AI
+.file           38;2;221;235;157
+.onnxrgb        38;2;221;235;157
+.cu             38;2;20;100;50
+# - Extra
+.PNG            38;2;30;100;130
+.qb             38;2;10;255;255
+.pem            38;2;255;0;0
+.pkt            38;2;205;200;170
+.drawio         38;2;252;180;84

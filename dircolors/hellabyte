@@ -1,0 +1,501 @@
+#!/usr/bin/env dircolors
+# ======================================================================
+# Configuration file for dircolors, a utility to help you set the
+# LS_COLORS environment variable used by GNU ls with the --color option.
+#
+# The keywords COLOR, OPTIONS, and EIGHTBIT (honored by the
+# slackware version of dircolors) are recognized but ignored.
+#
+# Below, there should be one TERM entry for each termtype that is colorizable
+#
+# ----------------------------------------------------------------------
+# AUTHOR: Nathaniel Hellabyte
+# https://github.com/hellabyte/myconfig
+# ======================================================================
+
+TERM linux
+TERM linux-c
+TERM mach-color
+TERM console
+TERM con132x25
+TERM con132x30
+TERM con132x43
+TERM con132x60
+TERM con80x25
+TERM con80x28
+TERM con80x30
+TERM con80x43
+TERM con80x50
+TERM con80x60
+TERM xterm
+TERM xterm-color
+TERM xterm-debian
+TERM xterm-256color
+TERM rxvt
+TERM screen
+TERM screen-w
+TERM screen-256color
+TERM vt100
+
+# Below are the color init strings for the basic file types. A color init
+# string consists of one or more of the following numeric codes:
+# Attribute codes:
+# 00=none 01=bold 04=underscore 05=blink 07=reverse 08=concealed
+# Text color codes:
+# 30=black 31=red 32=green 33=yellow 34=blue 35=magenta 36=cyan 37=white
+# Background color codes:
+# 40=black 41=red 42=green 43=yellow 44=blue 45=magenta 46=cyan 47=white
+RESET                 00;       # Resetting.
+NORMAL                00;       # Global Default
+FILE                  00;       # normal file
+DIR                   38;05;66  # directory
+LINK                  38;05;109 # symbolic link. Can be set to 'target'.
+FIFO                  00;33;01  # named pipe
+SOCK                  00;35;01  # socket
+DOOR                  00;35;04  # door
+BLOCK                 00;93;01  # block device driver
+CHAR                  00;33     # character device driver
+ORPHAN                38;05;203 # symlink to nonexistent file
+MISSING               38;05;210 # nonexistent file with symlink
+SETUID                37;41     # file that is setuid ( u+s )
+SETGID                30;43     # file that is setgid ( g+s )
+CAPABILITY            30;41     # Wut
+OTHER_WRITABLE        37;44     # dir that is other-writable ( o+w )
+STICKY                37;41     # Sticky bit set ( +t ) other not other-writable
+STICKY_OTHER_WRITABLE 37;45     # dir that is sticky and other-writable ( +t, o+w )
+EXEC                  38;05;040 # for files with executible bit
+
+# List any file extensions like '.gz' or '.tar' that you would like ls
+# to colorize below. Put the extension, a space, and the color init string.
+# (and any comments you want to add after a '#')
+
+# Common binary extensions
+*.cmd        38;05;72
+*.exe        38;05;72
+*.com        38;05;72
+*.btm        38;05;72
+*.bat        38;05;72
+
+# image formats
+*.eps        38;05;37
+*.jpg        38;05;37
+*.jpeg       38;05;37
+*.JPEG       38;05;37
+*.png        38;05;37
+*.gif        38;05;37
+*.bmp        38;05;37
+*.ppm        38;05;37
+*.tga        38;05;37
+*.xbm        38;05;37
+*.xpm        38;05;37
+*.tif        38;05;37
+*.png        38;05;37
+*.mkv        38;05;37
+*.mp4        38;05;37
+*.mpeg       38;05;37
+*.mpg        38;05;37
+*.avi        38;05;37
+*.fli        38;05;37
+*.gl         38;05;37
+*.dl         38;05;37
+
+# source code files special
+*.for        38;05;033
+*.f90        38;05;033
+*.F90        38;05;033
+*.fpp        38;05;033
+*.FPP        38;05;033
+*.f95        38;05;033
+*.F95        38;05;033
+*.f03        38;05;033
+*.F03        38;05;033
+*.f08        38;05;033
+*.F08        38;05;033
+*.f          38;05;033
+*.F          38;05;033
+*.f77        38;05;033
+*.F77        38;05;033
+*.py         38;05;108
+*.sh         38;05;037
+*.bash       38;05;037
+*.tex        38;05;037
+*.bib        38;05;030
+*.c          38;05;027
+*.cpp        38;05;027
+*.sty        38;05;027
+*.pl         38;05;027
+*.prl        38;05;027
+*.perl       38;05;027
+*.jl         38;05;027
+*.julia      38;05;027
+*.zsh        38;05;027
+*.rkt        38;05;027
+*.scheme     38;05;027
+*.vim        38;05;027
+
+# compile related
+*Makefile    38;05;202
+
+# source code files general 
+*.PL         38;05;175
+*.pm         38;05;175
+*.tt         38;05;175
+*.sql        38;05;175
+*.html       38;05;175
+*.css        38;05;175
+*.js         38;05;175
+*.awk        38;05;175
+
+# source code files other
+*.m          38;05;203
+
+# module/header/support files
+*.mod        38;05;39
+*.h          38;05;39
+*.hpp        38;05;39
+*.pyc        38;05;39
+
+# data files
+*.dat        38;05;140
+*.txt        38;05;141
+*.csv        38;05;110
+*.psv        38;05;110
+*.ssv        38;05;110
+*.tsv        38;05;110
+*.vtk        38;05;111
+*.npz        38;05;104
+*.yml        38;05;245
+*.yaml       38;05;245
+*.json       38;05;245
+*.bson       38;05;245
+*.sql        38;05;245
+*.ldb        38;05;245
+
+# parameter files
+*.prm        38;05;196
+*.parameter  38;05;196
+
+# document files
+*README      38;05;198
+*.md         38;05;198 
+*.pdf        38;05;220 
+*.djvu       38;05;103
+*.rtf        38;05;103 
+*.otf        38;05;103
+*.odt        38;05;103
+
+# prop. document files 
+*.doc        38;05;218 
+*.docx       38;05;218 
+*.org        38;05;218 
+*.ppt        38;05;218 
+*.pptx       38;05;218 
+*.xls        38;05;218 
+*.xlsx       38;05;218 
+
+# backup/storage files
+*.bak        38;05;146
+*.tar        38;05;146
+*.tgz        38;05;146
+*.tbz2       38;05;146
+*.txz        38;05;146
+*.tlz4       38;05;146
+*.arj        38;05;146
+*.taz        38;05;146
+*.lzh        38;05;146
+*.zip        38;05;146
+*.z          38;05;146
+*.Z          38;05;146
+*.gz         38;05;146
+*.bz2        38;05;146
+*.xz         38;05;146
+*.lz4        38;05;146
+*.jar        38;05;146
+*.7z         38;05;146
+*.zstd       38;05;147
+*.zst        38;05;147
+*.arrow      38;05;147
+*.feather    38;05;147
+
+# encrypted/private files
+*.gpg        38;05;209
+
+# storage/disk files
+*.deb        38;05;177
+*.rpm        38;05;177
+*.dmg        38;05;177
+*.img        38;05;177
+*.iso        38;05;177
+
+# configuration files
+*rc          38;05;108  
+*conf        38;05;108
+*config      38;05;108
+*profile     38;05;108
+*login       38;05;108
+*logout      38;05;108
+*info        38;05;108
+*options     38;05;108
+
+# Log/History Files
+*log         38;05;69
+*history     38;05;69
+*hst         38;05;69
+
+# Formatted Data Files
+*.ods        38;05;215
+
+# message files
+*.mime       38;05;45
+*.eml        38;05;45
+
+# # Sample Colors (uncomment to see)
+# *.xxx        38;05;0
+# *.xxx        38;05;1
+# *.xxx        38;05;2
+# *.xxx        38;05;3
+# *.xxx        38;05;4
+# *.xxx        38;05;5
+# *.xxx        38;05;6
+# *.xxx        38;05;7
+# *.xxx        38;05;8
+# *.xxx        38;05;9
+# *.xxx        38;05;10
+# *.xxx        38;05;11
+# *.xxx        38;05;12
+# *.xxx        38;05;13
+# *.xxx        38;05;14
+# *.xxx        38;05;15
+# *.xxx        38;05;16
+# *.xxx        38;05;17
+# *.xxx        38;05;18
+# *.xxx        38;05;19
+# *.xxx        38;05;20
+# *.xxx        38;05;21
+# *.xxx        38;05;22
+# *.xxx        38;05;23
+# *.xxx        38;05;24
+# *.xxx        38;05;25
+# *.xxx        38;05;26
+# *.xxx        38;05;27
+# *.xxx        38;05;28
+# *.xxx        38;05;29
+# *.xxx        38;05;30
+# *.xxx        38;05;31
+# *.xxx        38;05;32
+# *.xxx        38;05;33
+# *.xxx        38;05;34
+# *.xxx        38;05;35
+# *.xxx        38;05;36
+# *.xxx        38;05;37
+# *.xxx        38;05;38
+# *.xxx        38;05;39
+# *.xxx        38;05;40
+# *.xxx        38;05;41
+# *.xxx        38;05;42
+# *.xxx        38;05;43
+# *.xxx        38;05;44
+# *.xxx        38;05;45
+# *.xxx        38;05;46
+# *.xxx        38;05;47
+# *.xxx        38;05;48
+# *.xxx        38;05;49
+# *.xxx        38;05;50
+# *.xxx        38;05;51
+# *.xxx        38;05;52
+# *.xxx        38;05;53
+# *.xxx        38;05;54
+# *.xxx        38;05;55
+# *.xxx        38;05;56
+# *.xxx        38;05;57
+# *.xxx        38;05;58
+# *.xxx        38;05;59
+# *.xxx        38;05;60
+# *.xxx        38;05;61
+# *.xxx        38;05;62
+# *.xxx        38;05;63
+# *.xxx        38;05;64
+# *.xxx        38;05;65
+# *.xxx        38;05;66
+# *.xxx        38;05;67
+# *.xxx        38;05;68
+# *.xxx        38;05;69
+# *.xxx        38;05;70
+# *.xxx        38;05;71
+# *.xxx        38;05;72
+# *.xxx        38;05;73
+# *.xxx        38;05;74
+# *.xxx        38;05;75
+# *.xxx        38;05;76
+# *.xxx        38;05;77
+# *.xxx        38;05;78
+# *.xxx        38;05;79
+# *.xxx        38;05;80
+# *.xxx        38;05;81
+# *.xxx        38;05;82
+# *.xxx        38;05;83
+# *.xxx        38;05;84
+# *.xxx        38;05;85
+# *.xxx        38;05;86
+# *.xxx        38;05;87
+# *.xxx        38;05;88
+# *.xxx        38;05;89
+# *.xxx        38;05;90
+# *.xxx        38;05;91
+# *.xxx        38;05;92
+# *.xxx        38;05;93
+# *.xxx        38;05;94
+# *.xxx        38;05;95
+# *.xxx        38;05;96
+# *.xxx        38;05;97
+# *.xxx        38;05;98
+# *.xxx        38;05;99
+# *.xxx        38;05;100
+# *.xxx        38;05;101
+# *.xxx        38;05;102
+# *.xxx        38;05;103
+# *.xxx        38;05;104
+# *.xxx        38;05;105
+# *.xxx        38;05;106
+# *.xxx        38;05;107
+# *.xxx        38;05;108
+# *.xxx        38;05;109
+# *.xxx        38;05;110
+# *.xxx        38;05;111
+# *.xxx        38;05;112
+# *.xxx        38;05;113
+# *.xxx        38;05;114
+# *.xxx        38;05;115
+# *.xxx        38;05;116
+# *.xxx        38;05;117
+# *.xxx        38;05;118
+# *.xxx        38;05;119
+# *.xxx        38;05;120
+# *.xxx        38;05;121
+# *.xxx        38;05;122
+# *.xxx        38;05;123
+# *.xxx        38;05;124
+# *.xxx        38;05;125
+# *.xxx        38;05;126
+# *.xxx        38;05;127
+# *.xxx        38;05;128
+# *.xxx        38;05;129
+# *.xxx        38;05;130
+# *.xxx        38;05;131
+# *.xxx        38;05;132
+# *.xxx        38;05;133
+# *.xxx        38;05;134
+# *.xxx        38;05;135
+# *.xxx        38;05;136
+# *.xxx        38;05;137
+# *.xxx        38;05;138
+# *.xxx        38;05;139
+# *.xxx        38;05;140
+# *.xxx        38;05;141
+# *.xxx        38;05;142
+# *.xxx        38;05;143
+# *.xxx        38;05;144
+# *.xxx        38;05;145
+# *.xxx        38;05;146
+# *.xxx        38;05;147
+# *.xxx        38;05;148
+# *.xxx        38;05;149
+# *.xxx        38;05;150
+# *.xxx        38;05;151
+# *.xxx        38;05;152
+# *.xxx        38;05;153
+# *.xxx        38;05;154
+# *.xxx        38;05;155
+# *.xxx        38;05;156
+# *.xxx        38;05;157
+# *.xxx        38;05;158
+# *.xxx        38;05;159
+# *.xxx        38;05;160
+# *.xxx        38;05;161
+# *.xxx        38;05;162
+# *.xxx        38;05;163
+# *.xxx        38;05;164
+# *.xxx        38;05;165
+# *.xxx        38;05;166
+# *.xxx        38;05;167
+# *.xxx        38;05;168
+# *.xxx        38;05;169
+# *.xxx        38;05;170
+# *.xxx        38;05;171
+# *.xxx        38;05;172
+# *.xxx        38;05;173
+# *.xxx        38;05;174
+# *.xxx        38;05;175
+# *.xxx        38;05;176
+# *.xxx        38;05;177
+# *.xxx        38;05;178
+# *.xxx        38;05;179
+# *.xxx        38;05;180
+# *.xxx        38;05;181
+# *.xxx        38;05;182
+# *.xxx        38;05;183
+# *.xxx        38;05;184
+# *.xxx        38;05;185
+# *.xxx        38;05;186
+# *.xxx        38;05;187
+# *.xxx        38;05;188
+# *.xxx        38;05;189
+# *.xxx        38;05;190
+# *.xxx        38;05;191
+# *.xxx        38;05;192
+# *.xxx        38;05;193
+# *.xxx        38;05;194
+# *.xxx        38;05;195
+# *.xxx        38;05;196
+# *.xxx        38;05;197
+# *.xxx        38;05;198
+# *.xxx        38;05;199
+# *.xxx        38;05;200
+# *.xxx        38;05;201
+# *.xxx        38;05;202
+# *.xxx        38;05;203
+# *.xxx        38;05;204
+# *.xxx        38;05;205
+# *.xxx        38;05;206
+# *.xxx        38;05;207
+# *.xxx        38;05;208
+# *.xxx        38;05;209
+# *.xxx        38;05;210
+# *.xxx        38;05;211
+# *.xxx        38;05;212
+# *.xxx        38;05;213
+# *.xxx        38;05;214
+# *.xxx        38;05;215
+# *.xxx        38;05;216
+# *.xxx        38;05;217
+# *.xxx        38;05;218
+# *.xxx        38;05;219
+# *.xxx        38;05;220
+# *.xxx        38;05;221
+# *.xxx        38;05;222
+# *.xxx        38;05;223
+# *.xxx        38;05;224
+# *.xxx        38;05;225
+# *.xxx        38;05;226
+# *.xxx        38;05;227
+# *.xxx        38;05;228
+# *.xxx        38;05;229
+# *.xxx        38;05;230
+# *.xxx        38;05;231
+# *.xxx        38;05;232
+# *.xxx        38;05;233
+# *.xxx        38;05;234
+# *.xxx        38;05;235
+# *.xxx        38;05;236
+# *.xxx        38;05;237
+# *.xxx        38;05;238
+# *.xxx        38;05;239
+# *.xxx        38;05;240
+# *.xxx        38;05;241
+# *.xxx        38;05;242
+# *.xxx        38;05;243
+# *.xxx        38;05;244
+# *.xxx        38;05;245
+# Crap files 
+# .DS_Store  00;30
+# .localized 00;30

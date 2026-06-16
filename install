@@ -67,16 +67,16 @@ prerequisite() {
 install_style () {
 	echo "    ${BLUE}[${RED}*${BLUE}] ${ORANGE}Installing termux-style..."
 	# Delete old files
-	if [[ (-f $PREFIX/bin/style) && (-d $TERMUX_DIR/colors) && (-d $TERMUX_DIR/fonts) ]]; then
+	if [[ (-f $PREFIX/bin/style) && (-d $TERMUX_DIR/colors) && (-d $TERMUX_DIR/dircolors) && (-d $TERMUX_DIR/fonts) ]]; then
 	    echo "    ${BLUE}[${RED}*${BLUE}] ${RED}Deleting files from previous installation..."${BLUE}
-		{ rm -rf $PREFIX/bin/style $TERMUX_DIR/colors TERMUX_DIR/fonts; echo; }
+		{ rm -rf $PREFIX/bin/style $TERMUX_DIR/colors $TERMUX_DIR/dircolors $TERMUX_DIR/fonts; echo; }
 	fi
 	# Copying files
 	{ echo "    ${BLUE}[${RED}*${BLUE}] ${ORANGE}Copying files in ${GREEN}destination ${ORANGE}directory..."${BLUE}; }
-	{ mkdir -p $TERMUX_DIR/colors; mkdir -p $TERMUX_DIR/fonts; cp -r $DIR/colors $TERMUX_DIR; cp -r $DIR/fonts $TERMUX_DIR; cp -r $DIR/style $PREFIX/bin; }
+	{ mkdir -p $TERMUX_DIR/colors; mkdir -p $TERMUX_DIR/dircolors; mkdir -p $TERMUX_DIR/fonts; cp -r $DIR/colors $TERMUX_DIR; cp -r $DIR/dircolors $TERMUX_DIR; cp -r $DIR/fonts $TERMUX_DIR; cp -r $DIR/style $PREFIX/bin; }
 	{ chmod +x $PREFIX/bin/style; }
 	# Verify files 
-	if [[ (-f $PREFIX/bin/style) && (-d $TERMUX_DIR/colors) && (-d $TERMUX_DIR/fonts) ]]; then
+	if [[ (-f $PREFIX/bin/style) && (-d $TERMUX_DIR/colors) && (-d $TERMUX_DIR/dircolors) && (-d $TERMUX_DIR/fonts) ]]; then
 		{ echo; echo "    ${BLUE}[${RED}*${BLUE}] ${GREEN}Successfully Installed."; }
 		{ echo "    ${BLUE}[${RED}*${BLUE}] ${GREEN}Now you can Run this Program by just typing ${ORANGE}style${GREEN}."; echo; }
 		{ reset_color; exit 0; }

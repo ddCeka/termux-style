@@ -22,6 +22,7 @@ DISPLAY_ALL_FONTS='false'
 ## Directories
 TERMUX_DIR="$HOME/.termux"
 COLORS_DIR="$HOME/.termux/colors"
+DIRCOLORS_DIR="$HOME/.termux/dircolors"
 FONTS_DIR="$HOME/.termux/fonts"
 readonly DOWN_DIR="$TERMUX_DIR/cache"
 readonly NF_DIR="$DOWN_DIR"
@@ -68,6 +69,9 @@ check_files () {
     if [[ "$1" = colors ]]; then
         colors=($(ls $COLORS_DIR))
         echo ${#colors[@]}
+    elif [[ "$1" = dircolor ]]; then
+        dircolor=($(ls $DIRCOLORS_DIR))
+        echo ${#dircolor[@]}
     elif [[ "$1" = fonts ]]; then
         fonts=($(ls $FONTS_DIR))
         echo ${#fonts[@]}
@@ -76,6 +80,7 @@ check_files () {
 }
 
 total_colors=$(check_files colors)
+total_dircolors=$(check_files dircolor)
 total_fonts=$(check_files fonts)
 
 ## Reload Settings
@@ -83,6 +88,14 @@ reload_settings () {
     case "${TERMUX__USER_ID:-}" in ''|*[!0-9]*|0[0-9]*) TERMUX__USER_ID=0;; esac
     echo "    ${BLUE}[${RED}*${BLUE}] ${MAGENTA}Reloading Settings..."
     am broadcast --user "$TERMUX__USER_ID" -a "com.termux.app.reload_style" "com.termux" > /dev/null
+    { echo "    ${BLUE}[${RED}*${BLUE}] ${GREEN}Applied Successfully."; echo; }
+    return
+}
+
+## Reload Dircolors
+reload_dircolor () {
+    echo "    ${BLUE}[${RED}*${BLUE}] ${MAGENTA}Reloading Settings..."
+    eval "$(dircolors -b "$HOME"/.dircolors)" ;
     { echo "    ${BLUE}[${RED}*${BLUE}] ${GREEN}Applied Successfully."; echo; }
     return
 }
@@ -108,6 +121,34 @@ apply_colors () {
         echo "    ${BLUE}[${RED}*${BLUE}] ${ORANGE}Applying Color Scheme..."
         ln -sf $COLORS_DIR/$scheme $TERMUX_DIR/colors.properties
         { reload_settings; reset_color; return; }
+    else
+        echo -n "    ${BLUE}[${RED}!${BLUE}] ${RED}Back to menu."
+        { echo; return; }
+    fi
+    return
+}
+
+## Apply dircolor-schemes
+apply_dircolor () {
+    local count=1
+
+    # List the dircolor-schemes
+    dircolor_schemes=($(ls $DIRCOLORS_DIR))
+    for dircolor in "${dircolor_schemes[@]}"; do
+        dircolor_name=$(echo $dircolor)
+        echo ${ORANGE}"    [$count] ${dircolor_name%.*}"
+        count=$(($count+1))
+    done
+
+    # Read user selection
+    { echo; read -p ${BLUE}"    [${RED}Select Dircolor Scheme (1 to $total_dircolors)${BLUE}]: ${GREEN}" answer; echo; }
+
+    # Apply dircolor-scheme
+    if [[ (-n "$answer") && ("$answer" -le $total_dircolors) ]]; then
+        scheme=${dircolor_schemes[(( answer - 1 ))]}
+        echo "    ${BLUE}[${RED}*${BLUE}] ${ORANGE}Applying Color Scheme..."
+        ln -sf $DIRCOLORS_DIR/$scheme $HOME/.dircolors
+        { reload_dircolor; reset_color; return; }
     else
         echo -n "    ${BLUE}[${RED}!${BLUE}] ${RED}Back to menu."
         { echo; return; }
@@ -555,10 +596,12 @@ import_files () {
 ## Main menu
 until [[ "$REPLY" =~ ^[q/Q]$ ]]; do
 	active_color=`readlink $TERMUX_DIR/colors.properties | grep -o -E -e '(/[^/]+){2}$'`
+	active_dircolor=`readlink $HOME/.dircolors | grep -o -E -e '(/[^/]+){2}$'`
 	active_font=`readlink $TERMUX_DIR/font.ttf | grep -o -E -e '(/[^/]+){2}$'`
     banner
     echo "
     ${BLUE}[${RED}C${BLUE}] ${GREEN}Colors ($total_colors) (${CYAN}${active_color%.*}${GREEN})
+    ${BLUE}[${RED}L${BLUE}] ${GREEN}Dircolors ($total_dircolors) (${CYAN}${active_dircolor%.*}${GREEN})
     ${BLUE}[${RED}F${BLUE}] ${GREEN}Fonts ($total_fonts) (${CYAN}${active_font%.*}${GREEN})
     ${BLUE}[${RED}R${BLUE}] ${GREEN}Random
     ${BLUE}[${RED}D${BLUE}] ${GREEN}Download
@@ -568,9 +611,11 @@ until [[ "$REPLY" =~ ^[q/Q]$ ]]; do
 
     { read -p ${BLUE}"    [${RED}Select Option${BLUE}]: ${GREEN}"; echo; }
 
-    if [[ "$REPLY" =~ ^[c/C/f/F/r/R/d/D/i/I/q/Q]$ ]]; then      #validate input
+    if [[ "$REPLY" =~ ^[c/C/l/L/f/F/r/R/d/D/i/I/q/Q]$ ]]; then      #validate input
         if [[ "$REPLY" =~ ^[c/C]$ ]]; then
             apply_colors
+        elif [[ "$REPLY" =~ ^[l/L]$ ]]; then
+            apply_dircolor
         elif [[ "$REPLY" =~ ^[f/F]$ ]]; then
             apply_fonts
         elif [[ "$REPLY" =~ ^[r/R]$ ]]; then

@@ -17,7 +17,8 @@ Follow the steps below -
 # Go to home dir - 
 cd $HOME
 
-# Clone this repository (use `gh repo clone ddCeka/termux-style` if you want to use the GitHub CLI)- 
+# Clone this repository -
+(use `gh repo clone ddCeka/termux-style` if you want to use the GitHub CLI)
 git clone https://github.com/ddCeka/termux-style
 
 # Change to termux-style dir -
@@ -42,8 +43,9 @@ $ style
     │░░▀░░▀▀▀░▀░▀░▀░▀░▀▀▀░▀░▀░░░░░▀▀▀░░▀░░░▀░░▀▀▀░▀▀▀░░│
     └──────────────────────────────────────────────────┘
     
-    [C] Colors (count)
-    [F] Fonts (count)
+    [C] Colors (count) (currently active)
+    [L] Dircolors (count) (currently active)
+    [F] Fonts (count) (currently active)
     [R] Random
     [D] Download
     [I] Import
@@ -55,6 +57,7 @@ $ style
 ### Features
 
 + 500+ color-schemes.
++ 21 premade dircolors color-schemes.
 + 20 Nerd patched fonts and more.
 + Randomly change color-schemes.
 + Download font from [NerdFont repo](https://github.com/ryanoasis/nerd-fonts).

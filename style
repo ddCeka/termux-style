@@ -193,7 +193,7 @@ random_style () {
 }
 
 ## Download font
-download () {
+download_fonts () {
     info() {
         printf "\n%s\n" "$1"
     }
@@ -241,7 +241,7 @@ download () {
         printf "\033[1D\033[K"
     }
 
-    readonly ANIMATION=('⁻' "\\" '|' '/')
+    readonly ANIMATION=('' '' '' '' '' '')
     readonly FRAME_INTERVAL=0.25
 
     play_loading_animation_loop() {
@@ -357,6 +357,7 @@ download () {
         rm -rf "$FONT_DIR/$1"
         rm -f "$FONT_DIR/LICENSE"
         rm -f "$FONT_DIR/LICENSE.txt"
+        rm -f "$FONT_DIR/OFL.txt"
         rm -f "$FONT_DIR/README.md"
         total_fonts
         confirm "Done"
@@ -394,6 +395,7 @@ download () {
         done
     }
 
+    # TODO: complete the uninstall functions
     uninstall_fonts() {
         get_font_dir
         local -a fonts_to_uninstall
@@ -518,6 +520,7 @@ download () {
         done
     }
 
+    # TODO: add more modular options for installing fonts
     menu_install() {
         get_installed_fonts
         filter_installed_fonts
@@ -594,6 +597,7 @@ import_files () {
 }
 
 ## Main menu
+# TODO: overhaul the TUI maybe someday
 until [[ "$REPLY" =~ ^[q/Q]$ ]]; do
 	active_color=`readlink $TERMUX_DIR/colors.properties | grep -o -E -e '(/[^/]+){2}$'`
 	active_dircolor=`readlink $HOME/.dircolors | grep -o -E -e '(/[^/]+){2}$'`
@@ -621,7 +625,7 @@ until [[ "$REPLY" =~ ^[q/Q]$ ]]; do
         elif [[ "$REPLY" =~ ^[r/R]$ ]]; then
             random_style
         elif [[ "$REPLY" =~ ^[d/D]$ ]]; then
-            download
+            download_fonts
         elif [[ "$REPLY" =~ ^[i/I]$ ]]; then
             import_files
         fi

@@ -11,10 +11,10 @@ Simple script to change color-schemes and fonts for [Termux](https://termux.com)
 
 ### How to install
 
-Follow the steps below - 
+Follow the steps below -
 
 ```bash
-# Go to home dir - 
+# Go to home dir -
 cd $HOME
 
 # Clone this repository -
@@ -42,7 +42,7 @@ $ style
     │░░█░░█▀▀░█▀▄░█░█░█░█░▄▀▄░▄▄▄░▀▀█░░█░░░█░░█░░░█▀▀░░│
     │░░▀░░▀▀▀░▀░▀░▀░▀░▀▀▀░▀░▀░░░░░▀▀▀░░▀░░░▀░░▀▀▀░▀▀▀░░│
     └──────────────────────────────────────────────────┘
-    
+
     [C] Colors (count) (currently active)
     [L] Dircolors (count) (currently active)
     [F] Fonts (count) (currently active)
@@ -50,13 +50,13 @@ $ style
     [D] Download
     [I] Import
     [Q] Quit
-    
-    [Select Option]: 
+
+    [Select Option]:
 ```
 
 ### Features
 
-+ 500+ color-schemes.
++ 700 color-schemes.
 + 21 premade dircolors color-schemes.
 + 20 Nerd patched fonts and more.
 + Randomly change color-schemes.
@@ -73,7 +73,7 @@ $ style
     35) InconsolataGo
     ...
     q) type q to quit
-    
+
     [Select Option]: eg: 34
 
     [*] Reloading Settings...

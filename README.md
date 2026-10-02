@@ -56,7 +56,7 @@ $ style
 
 ### Features
 
-+ 700 color-schemes.
++ 700+ color-schemes.
 + 21 premade dircolors color-schemes.
 + 20 Nerd patched fonts and more.
 + Randomly change color-schemes.

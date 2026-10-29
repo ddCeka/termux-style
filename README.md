@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/github/license/ddCeka/termux-style?style=for-the-badge">
 </p>
 
-Simple script to change color-schemes and fonts for [Termux](https://termux.com) terminal emulator.
+Simple script to change color-schemes and fonts for [Termux](https://github.com/termux/termux-app) terminal emulator.
 
 > **`termux-style` provides color-schemes and powerline-ready fonts to customize the appearance of the Termux terminal.**
 
@@ -56,7 +56,7 @@ $ style
 
 ### Features
 
-+ 800 color-schemes.
++ 950+ color-schemes.
 + 21 premade dircolors color-schemes.
 + 20 Nerd patched fonts and more.
 + Randomly change color-schemes.

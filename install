@@ -1,100 +1,305 @@
 #!/data/data/com.termux/files/usr/bin/bash
+# Termux Style installer
+#
+# Usage:
+#   ./install             Interactive selection
+#   ./install --classic   Install ./style
+#   ./install --simple    Install ./style-simple
 
-## termux-style installer script
+set -o pipefail
 
-## ANSI Colors (FG & BG)
-RED="$(printf '\033[31m')"  GREEN="$(printf '\033[32m')"  ORANGE="$(printf '\033[33m')"  BLUE="$(printf '\033[34m')"
-MAGENTA="$(printf '\033[35m')"  CYAN="$(printf '\033[36m')"  WHITE="$(printf '\033[37m')" BLACK="$(printf '\033[30m')"
-REDBG="$(printf '\033[41m')"  GREENBG="$(printf '\033[42m')"  ORANGEBG="$(printf '\033[43m')"  BLUEBG="$(printf '\033[44m')"
-MAGENTABG="$(printf '\033[45m')"  CYANBG="$(printf '\033[46m')"  WHITEBG="$(printf '\033[47m')" BLACKBG="$(printf '\033[40m')"
-DEFAULT_FG="$(printf '\033[39m')"  DEFAULT_BG="$(printf '\033[49m')"
+readonly SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+readonly TERMUX_DIR="$HOME/.termux"
+readonly BIN_DIR="${PREFIX:-}/bin"
+readonly DEST="$BIN_DIR/style"
 
-## Directories
-TERMUX_DIR="$HOME/.termux"
-DIR="$(pwd)"
+RED=$'\033[31m'
+GREEN=$'\033[32m'
+YELLOW=$'\033[33m'
+BLUE=$'\033[34m'
+CYAN=$'\033[36m'
+RESET=$'\033[0m'
 
-## Banner
-banner () {
-    clear
-    echo "
-    ${BLUE}┌──────────────────────────────────────────────────┐
-    ${BLUE}│${RED}░▀█▀░█▀▀░█▀▄░█▄█░█░█░█░█${ORANGE}░░░░░${GREEN}█▀▀░▀█▀░█░█░█░░░█▀▀░░${BLUE}│
-    ${BLUE}│${RED}░░█░░█▀▀░█▀▄░█░█░█░█░▄▀▄${ORANGE}░▄▄▄${RED}░${GREEN}▀▀█░░█░░░█░░█░░░█▀▀░░${BLUE}│
-    ${BLUE}│${RED}░░▀░░▀▀▀░▀░▀░▀░▀░▀▀▀░▀░▀${ORANGE}░░░░░${GREEN}▀▀▀░░▀░░░▀░░▀▀▀░▀▀▀░░${BLUE}│
-    ${BLUE}└──────────────────────────────────────────────────┘
-    ${BLUE}"
+say()  { printf '%b\n' "$*"; }
+info() { say "  ${BLUE}*${RESET} $*"; }
+ok()   { say "  ${GREEN}✓${RESET} $*"; }
+warn() { say "  ${YELLOW}!${RESET} $*" >&2; }
+
+cleanup() {
+    [[ -n "${TEMP_SCRIPT:-}" && -e "${TEMP_SCRIPT:-}" ]] &&
+        rm -f -- "$TEMP_SCRIPT"
+    printf '%b' "$RESET"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+usage() {
+    cat <<'EOF'
+Usage: ./install [--classic | --simple | --help]
+
+Without an option, the installer asks which version to install.
+
+Expected script files beside the installer:
+  style             Classic version
+  style-simple      Simple version
+EOF
 }
 
-## Script Termination
-exit_on_signal_SIGINT () {
-    { printf "\n\n%s\n" "    ${BLUE}[${RED}*${BLUE}] ${RED}Script interrupted." 2>&1; echo; reset_color; }
-    exit 0
+banner() {
+    clear 2>/dev/null || true
+    say "${BLUE}┌──────────────────────────────────────────┐"
+    say "│          ${CYAN}TERMUX STYLE INSTALLER${BLUE}          │"
+    say "└──────────────────────────────────────────┘${RESET}"
+    printf '\n'
 }
 
-exit_on_signal_SIGTERM () {
-    { printf "\n\n%s\n" "    ${BLUE}[${RED}*${BLUE}] ${RED}Script terminated." 2>&1; echo; reset_color; }
-    exit 0
+fail() {
+    warn "$1"
+    exit 1
 }
 
-trap exit_on_signal_SIGINT SIGINT
-trap exit_on_signal_SIGTERM SIGTERM
+check_termux() {
+    [[ -n "${PREFIX:-}" && -d "$PREFIX" ]] ||
+        fail "This installer expects to run inside Termux."
 
-## Reset terminal colors
-reset_color() {
-	tput sgr0   # reset attributes
-	tput op     # reset color
-    return
+    [[ -d "$BIN_DIR" ]] ||
+        fail "Termux's bin directory was not found: $BIN_DIR"
+
+    [[ -w "$BIN_DIR" ]] ||
+        fail "Cannot write to $BIN_DIR. Check your Termux installation."
 }
 
-## Prerequisite
-prerequisite() {
-	{ echo; echo "    ${BLUE}[${RED}*${BLUE}] ${ORANGE}Installing Dependencies..."${CYAN}; echo; }
-	if [[ (-f $PREFIX/bin/curl) && (-f $PREFIX/bin/wget) && (-f $PREFIX/bin/tput) ]]; then
-		{ echo "    ${BLUE}[${RED}*${BLUE}] ${GREEN}Dependencies are already Installed!"; }
-	else
-		{ pkg install -y curl wget ncurses-utils; }
-		(type -p curl wget tput &> /dev/null) && { echo; echo "    ${BLUE}[${RED}*${BLUE}] ${GREEN}Dependencies are succesfully installed!"; } || { echo; echo "    ${BLUE}[${RED}!${BLUE}] ${RED}Error Occured, failed to install dependencies."; echo; reset_color; exit 1; }
-	fi
+choose_version() {
+    local choice
+
+    banner
+    say "Choose the version to install:"
+    say "  1) Classic"
+    say "  2) Simple"
+    say "  q) Cancel"
+    printf '\n'
+    printf 'Selection: '
+
+    if ! IFS= read -r choice; then
+        fail "No selection received."
+    fi
+
+    case "${choice,,}" in
+        1|c|classic) printf 'classic\n' ;;
+        2|s|simple) printf 'simple\n' ;;
+        q|quit) exit 0 ;;
+        *) fail "Invalid selection." ;;
+    esac
 }
 
-## Install termux-style
-install_style () {
-	echo "    ${BLUE}[${RED}*${BLUE}] ${ORANGE}Installing termux-style..."
-	# Delete old files
-	if [[ (-f $PREFIX/bin/style) && (-d $TERMUX_DIR/colors) && (-d $TERMUX_DIR/dircolors) && (-d $TERMUX_DIR/fonts) ]]; then
-	    echo "    ${BLUE}[${RED}*${BLUE}] ${RED}Deleting files from previous installation..."${BLUE}
-		{ rm -rf $PREFIX/bin/style $TERMUX_DIR/colors $TERMUX_DIR/dircolors $TERMUX_DIR/fonts; echo; }
-	fi
-	# Copying files
-	{ echo "    ${BLUE}[${RED}*${BLUE}] ${ORANGE}Copying files in ${GREEN}destination ${ORANGE}directory..."${BLUE}; }
-	{ mkdir -p $TERMUX_DIR/colors; mkdir -p $TERMUX_DIR/dircolors; mkdir -p $TERMUX_DIR/fonts; cp -r $DIR/colors $TERMUX_DIR; cp -r $DIR/dircolors $TERMUX_DIR; cp -r $DIR/fonts $TERMUX_DIR; cp -r $DIR/style $PREFIX/bin; }
-	{ chmod +x $PREFIX/bin/style; }
-	# Verify files 
-	if [[ (-f $PREFIX/bin/style) && (-d $TERMUX_DIR/colors) && (-d $TERMUX_DIR/dircolors) && (-d $TERMUX_DIR/fonts) ]]; then
-		{ echo; echo "    ${BLUE}[${RED}*${BLUE}] ${GREEN}Successfully Installed."; }
-		{ echo "    ${BLUE}[${RED}*${BLUE}] ${GREEN}Now you can Run this Program by just typing ${ORANGE}style${GREEN}."; echo; }
-		{ reset_color; exit 0; }
-	else
-		{ echo "    ${BLUE}[${RED}!${BLUE}] ${RED}Error Occured."; echo; reset_color; exit 1; }
-	fi
+script_for_version() {
+    case "$1" in
+        classic)  printf '%s\n' "$SCRIPT_DIR/style" ;;
+        simple) printf '%s\n' "$SCRIPT_DIR/style-simple" ;;
+        *) fail "Internal error: unknown version '$1'." ;;
+    esac
 }
 
-## Main
-main () {
-	banner
-	prerequisite
-	# Check for previous installation
-	if [[ (-f $PREFIX/bin/style) && (-d $TERMUX_DIR/colors) && (-d $TERMUX_DIR/fonts) ]]; then
-		{ echo; echo "    ${BLUE}[${RED}!${BLUE}] ${ORANGE}termux-style ${GREEN}is already installed."; }
-		{ read -p "    ${BLUE}[${RED}?${BLUE}] ${ORANGE}Do you wanna re-install it? ${GREEN}(y/n): ${GREEN}"; echo; }
-		if [[ "$REPLY" =~ ^[y/Y]$ ]]; then
-			install_style
-		else
-			{ reset_color; exit; }
-		fi
-	else
-		{ echo; install_style; }
-	fi
+missing_commands_for_version() {
+    case "$1" in
+        classic)
+            # The classic script uses curl/wget for imports and tput for
+            # terminal reset. coreutils provides utilities such as shuf.
+            for cmd in curl wget tput shuf; do
+                command -v "$cmd" >/dev/null 2>&1 || printf '%s\n' "$cmd"
+            done
+            ;;
+        simple)
+            # The simple Nerd Font downloader uses jq, curl, and tar.
+            for cmd in curl jq tar; do
+                command -v "$cmd" >/dev/null 2>&1 || printf '%s\n' "$cmd"
+            done
+            ;;
+    esac
 }
 
-main
+package_for_command() {
+    case "$1" in
+        curl) printf 'curl\n' ;;
+        wget) printf 'wget\n' ;;
+        jq)   printf 'jq\n' ;;
+        tar)  printf 'tar\n' ;;
+        tput) printf 'ncurses-utils\n' ;;
+        shuf) printf 'coreutils\n' ;;
+    esac
+}
+
+install_dependencies() {
+    local version="$1"
+    local command_name package
+    local -a missing=()
+    local -a packages=()
+
+    while IFS= read -r command_name; do
+        [[ -n "$command_name" ]] && missing+=("$command_name")
+    done < <(missing_commands_for_version "$version")
+
+    if (( ${#missing[@]} == 0 )); then
+        ok "Required commands are already installed."
+        return 0
+    fi
+
+    for command_name in "${missing[@]}"; do
+        package="$(package_for_command "$command_name")"
+        [[ -n "$package" ]] || continue
+
+        local already_listed=false
+        local existing
+        for existing in "${packages[@]}"; do
+            [[ "$existing" == "$package" ]] && already_listed=true
+        done
+        [[ "$already_listed" == true ]] || packages+=("$package")
+    done
+
+    warn "Missing commands: ${missing[*]}"
+    info "The installer needs these Termux packages: ${packages[*]}"
+    printf 'Install them now? [y/N] '
+
+    local answer
+    IFS= read -r answer || answer=""
+    case "${answer,,}" in
+        y|yes) ;;
+        *) fail "Cannot continue without the required commands." ;;
+    esac
+
+    command -v pkg >/dev/null 2>&1 ||
+        fail "Termux's pkg command was not found."
+
+    pkg install -y "${packages[@]}" ||
+        fail "Package installation failed."
+
+    while IFS= read -r command_name; do
+        [[ -n "$command_name" ]] &&
+            command -v "$command_name" >/dev/null 2>&1 ||
+            fail "Required command is still missing: $command_name"
+    done < <(missing_commands_for_version "$version")
+
+    ok "Dependencies installed."
+}
+
+copy_assets_without_overwriting() {
+    local name source destination
+    local copied=false
+
+    for name in colors dircolors fonts; do
+        source="$SCRIPT_DIR/$name"
+        destination="$TERMUX_DIR/$name"
+
+        [[ -d "$source" ]] || continue
+
+        mkdir -p "$destination" ||
+            fail "Could not create $destination"
+
+        # Add only files that aren't already present. Existing themes and fonts
+        # are left untouched.
+        if cp -an -- "$source/." "$destination/"; then
+            copied=true
+        else
+            fail "Could not copy bundled $name files."
+        fi
+    done
+
+    if [[ "$copied" == true ]]; then
+        ok "Added bundled files without overwriting existing files."
+    else
+        info "No bundled colors, dircolors, or fonts directories found; the script can create them as needed."
+    fi
+}
+
+install_selected_script() {
+    local source="$1"
+    local version="$2"
+    local backup
+
+    [[ -f "$source" ]] ||
+        fail "Script file not found: $source"
+
+    bash -n "$source" ||
+        fail "The selected script has a Bash syntax error."
+
+    TEMP_SCRIPT="$(mktemp "$BIN_DIR/.style.XXXXXX")" ||
+        fail "Could not create a temporary installer file in $BIN_DIR."
+
+    cp -- "$source" "$TEMP_SCRIPT" ||
+        fail "Could not stage the selected script."
+    chmod 755 "$TEMP_SCRIPT" ||
+        fail "Could not make the staged script executable."
+
+    # Check the copied file too, before replacing anything.
+    bash -n "$TEMP_SCRIPT" ||
+        fail "The staged script failed its Bash syntax check."
+
+    if [[ -e "$DEST" || -L "$DEST" ]]; then
+        printf '\n'
+        warn "An existing installation was found at $DEST"
+        printf 'Replace it? A backup will be kept. [y/N] '
+
+        local answer
+        IFS= read -r answer || answer=""
+        case "${answer,,}" in
+            y|yes) ;;
+            *) fail "Installation cancelled; existing script was not changed." ;;
+        esac
+
+        backup="$DEST.backup.$(date +%Y%m%d-%H%M%S)"
+        cp -p -- "$DEST" "$backup" ||
+            fail "Could not back up the existing script."
+        info "Backup saved as $backup"
+    fi
+
+    mv -f -- "$TEMP_SCRIPT" "$DEST" ||
+        fail "Could not install the script at $DEST"
+    TEMP_SCRIPT=""
+
+    ok "Installed the $version version as: $DEST"
+    say "Run it by typing: ${CYAN}style${RESET}"
+}
+
+main() {
+    local version source
+
+    case "${1:-}" in
+        --help|-h)
+            usage
+            exit 0
+            ;;
+        --classic)
+            version=classic
+            ;;
+        --simple)
+            version=simple
+            ;;
+        "")
+            version="$(choose_version)"
+            ;;
+        *)
+            usage >&2
+            exit 2
+            ;;
+    esac
+
+    check_termux
+    source="$(script_for_version "$version")"
+
+    [[ -f "$source" ]] ||
+        fail "Could not find the $version script at $source"
+
+    install_dependencies "$version"
+
+    mkdir -p "$TERMUX_DIR" ||
+        fail "Could not create $TERMUX_DIR"
+
+    copy_assets_without_overwriting
+    install_selected_script "$source" "$version"
+
+    printf '\n'
+    ok "Installation complete."
+}
+
+main "$@"

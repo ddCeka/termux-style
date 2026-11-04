@@ -1,0 +1,483 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+set -o pipefail
+
+readonly TERMUX_DIR="$HOME/.termux"
+readonly COLORS_DIR="$TERMUX_DIR/colors"
+readonly DIRCOLORS_DIR="$TERMUX_DIR/dircolors"
+readonly FONTS_DIR="$TERMUX_DIR/fonts"
+readonly CACHE_DIR="$TERMUX_DIR/cache"
+readonly NERD_FONTS_API="https://api.github.com/repos/ryanoasis/nerd-fonts"
+
+RED=$'\033[31m'
+GREEN=$'\033[32m'
+YELLOW=$'\033[33m'
+BLUE=$'\033[34m'
+CYAN=$'\033[36m'
+RESET=$'\033[0m'
+
+FILES=()
+FONT_FILES=()
+
+say()  { printf '%b\n' "$*"; }
+info() { say "  ${BLUE}*${RESET} $*"; }
+ok()   { say "  ${GREEN}✓${RESET} $*"; }
+warn() { say "  ${YELLOW}!${RESET} $*" >&2; }
+
+pause() {
+    printf '\nPress Enter to continue...'
+    read -r _ || true
+}
+
+cleanup() {
+    tput cnorm 2>/dev/null || true
+    printf '%b' "$RESET"
+}
+
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+ensure_dirs() {
+    mkdir -p "$COLORS_DIR" "$DIRCOLORS_DIR" "$FONTS_DIR" "$CACHE_DIR" || {
+        warn "Could not create Termux configuration directories."
+        return 1
+    }
+}
+
+banner() {
+    clear 2>/dev/null || true
+    say "${BLUE}┌──────────────────────────────────────────┐"
+    say "│               ${CYAN}TERMUX STYLE${BLUE}               │"
+    say "└──────────────────────────────────────────┘${RESET}"
+    printf '\n'
+}
+
+prompt() {
+    local message="$1"
+    printf '%b' "$message"
+    read -r REPLY
+}
+
+collect_files() {
+    local dir="$1"
+    local path
+    FILES=()
+
+    shopt -s nullglob
+    for path in "$dir"/*; do
+        [[ -f "$path" ]] && FILES+=("$path")
+    done
+    shopt -u nullglob
+}
+
+collect_fonts() {
+    FONT_FILES=()
+    [[ -d "$FONTS_DIR" ]] || return 0
+
+    while IFS= read -r -d '' path; do
+        FONT_FILES+=("$path")
+    done < <(find "$FONTS_DIR" -type f -iname '*.ttf' -print0 2>/dev/null)
+}
+
+reload_termux() {
+    if command -v am >/dev/null 2>&1; then
+        am broadcast --user "${TERMUX__USER_ID:-0}" \
+            -a com.termux.app.reload_style com.termux >/dev/null 2>&1 || true
+    fi
+}
+
+apply_link() {
+    local source="$1"
+    local destination="$2"
+
+    if ! ln -sfn -- "$source" "$destination"; then
+        warn "Could not update $destination"
+        return 1
+    fi
+}
+
+show_active() {
+    local path="$1"
+    if [[ -L "$path" ]]; then
+        readlink "$path" 2>/dev/null || printf 'unknown'
+    else
+        printf 'not set'
+    fi
+}
+
+select_and_apply() {
+    local title="$1"
+    local dir="$2"
+    local destination="$3"
+    local answer
+    local i
+
+    collect_files "$dir"
+    if (( ${#FILES[@]} == 0 )); then
+        warn "No files found in $dir"
+        pause
+        return 1
+    fi
+
+    say "$title"
+    for i in "${!FILES[@]}"; do
+        printf '  %2d) %s\n' "$((i + 1))" "${FILES[$i]##*/}"
+    done
+    printf '\n'
+
+    prompt "Choose a number (or q to cancel): "
+    answer="$REPLY"
+
+    [[ "$answer" == [qQ] ]] && return 0
+    if [[ ! "$answer" =~ ^[0-9]+$ ]] ||
+       (( answer < 1 || answer > ${#FILES[@]} )); then
+        warn "Invalid selection."
+        pause
+        return 1
+    fi
+
+    apply_link "${FILES[$((answer - 1))]}" "$destination" || {
+        pause
+        return 1
+    }
+
+    ok "Applied ${FILES[$((answer - 1))]##*/}"
+    return 0
+}
+
+apply_colors() {
+    select_and_apply "Color schemes:" "$COLORS_DIR" "$TERMUX_DIR/colors.properties" || return
+    reload_termux
+}
+
+apply_font() {
+    local answer
+    local i
+
+    collect_fonts
+    if (( ${#FONT_FILES[@]} == 0 )); then
+        warn "No .ttf fonts found in $FONTS_DIR"
+        pause
+        return 1
+    fi
+
+    say "Available .ttf fonts:"
+    for i in "${!FONT_FILES[@]}"; do
+        printf '  %2d) %s\n' "$((i + 1))" "${FONT_FILES[$i]#"$FONTS_DIR"/}"
+    done
+    printf '\n'
+
+    prompt "Choose a number (or q to cancel): "
+    answer="$REPLY"
+
+    [[ "$answer" == [qQ] ]] && return 0
+    if [[ ! "$answer" =~ ^[0-9]+$ ]] ||
+       (( answer < 1 || answer > ${#FONT_FILES[@]} )); then
+        warn "Invalid selection."
+        pause
+        return 1
+    fi
+
+    apply_link "${FONT_FILES[$((answer - 1))]}" "$TERMUX_DIR/font.ttf" || {
+        pause
+        return 1
+    }
+
+    ok "Applied ${FONT_FILES[$((answer - 1))]##*/}"
+    reload_termux
+}
+
+apply_dircolors() {
+    select_and_apply "Dircolors schemes:" "$DIRCOLORS_DIR" "$HOME/.dircolors" || return
+    ok "Linked ~/.dircolors. New shells need to load it with: eval \"\$(dircolors -b ~/.dircolors)\""
+}
+
+random_style() {
+    local -a schemes=()
+    local -a fonts=()
+    local selected
+
+    collect_files "$COLORS_DIR"
+    schemes=("${FILES[@]}")
+
+    if (( ${#schemes[@]} == 0 )); then
+        warn "No color schemes found in $COLORS_DIR"
+        pause
+        return 1
+    fi
+
+    selected="${schemes[RANDOM % ${#schemes[@]}]}"
+    apply_link "$selected" "$TERMUX_DIR/colors.properties" || return
+    ok "Random color scheme: ${selected##*/}"
+
+    collect_fonts
+    fonts=("${FONT_FILES[@]}")
+    if (( ${#fonts[@]} > 0 )); then
+        selected="${fonts[RANDOM % ${#fonts[@]}]}"
+        apply_link "$selected" "$TERMUX_DIR/font.ttf" || return
+        ok "Random font: ${selected##*/}"
+    fi
+
+    reload_termux
+    pause
+}
+
+safe_filename() {
+    # Keep imported filenames predictable and avoid path components.
+    local name="${1##*/}"
+    name="${name//[^a-zA-Z0-9._-]/_}"
+    [[ -n "$name" && "$name" != "." ]] || name="imported.properties"
+    printf '%s\n' "$name"
+}
+
+import_scheme() {
+    local choice source name destination temp
+
+    say "Import a color scheme:"
+    say "  1) From a local file"
+    say "  2) From a URL"
+    prompt "Choose 1 or 2 (or q to cancel): "
+    choice="$REPLY"
+
+    case "$choice" in
+        1)
+            prompt "Path to scheme file: "
+            source="${REPLY/#\~/$HOME}"
+            if [[ ! -f "$source" ]]; then
+                warn "File not found."
+                pause
+                return 1
+            fi
+            name="$(safe_filename "$source")"
+            destination="$COLORS_DIR/$name"
+            if ! cp -- "$source" "$destination"; then
+                warn "Could not copy the file."
+                pause
+                return 1
+            fi
+            ;;
+        2)
+            if ! command -v curl >/dev/null 2>&1; then
+                warn "Install curl first: pkg install curl"
+                pause
+                return 1
+            fi
+
+            prompt "URL of scheme file: "
+            source="$REPLY"
+            [[ "$source" == https://* || "$source" == http://* ]] || {
+                warn "Enter a valid HTTP or HTTPS URL."
+                pause
+                return 1
+            }
+
+            name="$(safe_filename "${source%%\?*}")"
+            destination="$COLORS_DIR/$name"
+            temp="$(mktemp "$CACHE_DIR/import.XXXXXX")" || return 1
+
+            if ! curl --fail --location --silent --show-error \
+                --output "$temp" "$source"; then
+                rm -f -- "$temp"
+                warn "Download failed."
+                pause
+                return 1
+            fi
+
+            if [[ ! -s "$temp" ]]; then
+                rm -f -- "$temp"
+                warn "Downloaded file is empty."
+                pause
+                return 1
+            fi
+
+            mv -- "$temp" "$destination"
+            ;;
+        [qQ])
+            return 0
+            ;;
+        *)
+            warn "Invalid selection."
+            pause
+            return 1
+            ;;
+    esac
+
+    apply_link "$destination" "$TERMUX_DIR/colors.properties" || return
+    reload_termux
+    ok "Imported and applied $name"
+    pause
+}
+
+check_download_dependencies() {
+    local missing=()
+    local command_name
+
+    for command_name in curl jq tar; do
+        command -v "$command_name" >/dev/null 2>&1 || missing+=("$command_name")
+    done
+
+    if (( ${#missing[@]} > 0 )); then
+        warn "Missing dependencies: ${missing[*]}"
+        say "Install them with: pkg install ${missing[*]}"
+        return 1
+    fi
+}
+
+download_nerd_font() {
+    local release_json tag
+    local -a assets=()
+    local answer asset_name asset_url family archive staging
+    local i
+    local found_font=false
+
+    check_download_dependencies || {
+        pause
+        return 1
+    }
+
+    info "Fetching the latest Nerd Fonts release..."
+    release_json="$(curl --fail --location --silent --show-error \
+        "$NERD_FONTS_API/releases/latest")" || {
+        warn "Could not reach the GitHub API."
+        pause
+        return 1
+    }
+
+    tag="$(jq -r '.tag_name // empty' <<< "$release_json")"
+    if [[ -z "$tag" ]]; then
+        warn "Could not read release information from GitHub."
+        pause
+        return 1
+    fi
+
+    while IFS=$'\t' read -r asset_name asset_url; do
+        [[ -n "$asset_name" && -n "$asset_url" ]] &&
+            assets+=("$asset_name"$'\t'"$asset_url")
+    done < <(
+        jq -r '.assets[]?
+            | select(.name | endswith(".tar.xz"))
+            | [.name, .browser_download_url]
+            | @tsv' <<< "$release_json"
+    )
+
+    if (( ${#assets[@]} == 0 )); then
+        warn "No downloadable font archives were listed in release $tag."
+        pause
+        return 1
+    fi
+
+    say "Nerd Fonts release $tag:"
+    for i in "${!assets[@]}"; do
+        IFS=$'\t' read -r asset_name _ <<< "${assets[$i]}"
+        printf '  %2d) %s\n' "$((i + 1))" "${asset_name%.tar.xz}"
+    done
+    printf '\n'
+
+    prompt "Choose a font (or q to cancel): "
+    answer="$REPLY"
+    [[ "$answer" == [qQ] ]] && return 0
+
+    if [[ ! "$answer" =~ ^[0-9]+$ ]] ||
+       (( answer < 1 || answer > ${#assets[@]} )); then
+        warn "Invalid selection."
+        pause
+        return 1
+    fi
+
+    IFS=$'\t' read -r asset_name asset_url <<< "${assets[$((answer - 1))]}"
+    family="${asset_name%.tar.xz}"
+
+    # Reject unexpected asset names before using them in paths.
+    if [[ ! "$family" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+        warn "Unexpected font archive name; refusing to install it."
+        pause
+        return 1
+    fi
+
+    archive="$CACHE_DIR/$asset_name"
+    staging="$(mktemp -d "$CACHE_DIR/font.XXXXXX")" || return 1
+
+    info "Downloading $asset_name..."
+    if ! curl --fail --location --retry 2 --silent --show-error \
+        --output "$archive" "$asset_url"; then
+        rm -rf -- "$staging"
+        rm -f -- "$archive"
+        warn "Download failed."
+        pause
+        return 1
+    fi
+
+    info "Extracting font files..."
+    if ! tar -xf "$archive" -C "$staging"; then
+        rm -rf -- "$staging"
+        rm -f -- "$archive"
+        warn "Could not extract the archive."
+        pause
+        return 1
+    fi
+
+    mkdir -p "$FONTS_DIR/$family"
+    while IFS= read -r -d '' source; do
+        cp -f -- "$source" "$FONTS_DIR/$family/${source##*/}" || {
+            rm -rf -- "$staging"
+            warn "Could not install a font file."
+            pause
+            return 1
+        }
+        found_font=true
+    done < <(find "$staging" -type f -iname '*.ttf' -print0)
+
+    rm -rf -- "$staging"
+    rm -f -- "$archive"
+
+    if [[ "$found_font" != true ]]; then
+        rmdir "$FONTS_DIR/$family" 2>/dev/null || true
+        warn "The archive contained no .ttf files."
+        pause
+        return 1
+    fi
+
+    ok "Installed $family into $FONTS_DIR/$family"
+    say "Use “Apply font” from the menu to select one of its .ttf files."
+    pause
+}
+
+main_menu() {
+    local choice
+
+    while true; do
+        banner
+        say "Colors:    $(show_active "$TERMUX_DIR/colors.properties")"
+        say "Font:      $(show_active "$TERMUX_DIR/font.ttf")"
+        say "Dircolors: $(show_active "$HOME/.dircolors")"
+        printf '\n'
+        say "  1) Apply a color scheme"
+        say "  2) Apply a font"
+        say "  3) Apply a dircolors scheme"
+        say "  4) Random color and font"
+        say "  5) Import a color scheme"
+        say "  6) Download a Nerd Font"
+        say "  q) Quit"
+        printf '\n'
+
+        prompt "Choose an option: "
+        choice="$REPLY"
+
+        case "${choice,,}" in
+            1) apply_colors; pause ;;
+            2) apply_font; pause ;;
+            3) apply_dircolors; pause ;;
+            4) random_style ;;
+            5) import_scheme ;;
+            6) download_nerd_font ;;
+            q) break ;;
+            *) warn "Unknown option."; pause ;;
+        esac
+    done
+
+    say "Goodbye!"
+}
+
+ensure_dirs || exit 1
+main_menu

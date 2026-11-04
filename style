@@ -1,39 +1,60 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-## A simple script to change color-schemes & fonts of termux terminal emulator.
+# A simple script to change color-schemes & fonts of termux terminal emulator.
 
-## ANSI Colors (FG & BG)
-RED="$(printf '\033[31m')"  GREEN="$(printf '\033[32m')"  ORANGE="$(printf '\033[33m')"  BLUE="$(printf '\033[34m')"
-MAGENTA="$(printf '\033[35m')"  CYAN="$(printf '\033[36m')"  WHITE="$(printf '\033[37m')" BLACK="$(printf '\033[30m')"
-REDBG="$(printf '\033[41m')"  GREENBG="$(printf '\033[42m')"  ORANGEBG="$(printf '\033[43m')"  BLUEBG="$(printf '\033[44m')"
-MAGENTABG="$(printf '\033[45m')"  CYANBG="$(printf '\033[46m')"  WHITEBG="$(printf '\033[47m')" BLACKBG="$(printf '\033[40m')"
-DEFAULT_FG="$(printf '\033[39m')"  DEFAULT_BG="$(printf '\033[49m')"
+set -u
+set -o pipefail
 
-## Api
+# -----------------------------------------------------------------------------
+# ANSI Colors
+# -----------------------------------------------------------------------------
+RED=$'\033[31m'
+GREEN=$'\033[32m'
+ORANGE=$'\033[33m'
+BLUE=$'\033[34m'
+MAGENTA=$'\033[35m'
+CYAN=$'\033[36m'
+WHITE=$'\033[37m'
+BLACK=$'\033[30m'
+REDBG=$'\033[41m'
+GREENBG=$'\033[42m'
+ORANGEBG=$'\033[43m'
+BLUEBG=$'\033[44m'
+MAGENTABG=$'\033[45m'
+CYANBG=$'\033[46m'
+WHITEBG=$'\033[47m'
+BLACKBG=$'\033[40m'
+DEFAULT_FG=$'\033[39m'
+DEFAULT_BG=$'\033[49m'
+
+# -----------------------------------------------------------------------------
+# Directories
+# -----------------------------------------------------------------------------
+TERMUX_DIR="$HOME/.termux"
+COLORS_DIR="$TERMUX_DIR/colors"
+DIRCOLORS_DIR="$TERMUX_DIR/dircolors"
+FONTS_DIR="$TERMUX_DIR/fonts"
+PREFIX_DIR="${PREFIX:-/data/data/com.termux/files/usr}"
+CACHE_DIR="$TERMUX_DIR/cache"
+FONT_RELEASES_DIR="$CACHE_DIR/releases"
+
 readonly NERDFONTSAPI='https://api.github.com/repos/ryanoasis/nerd-fonts'
 readonly NERDFONTSREPO='https://github.com/ryanoasis/nerd-fonts'
-NEW_RELEASE_AVAILABLE='false'
-KEEP_FONT_ARCHIVES='false'
-INCLUDE_INSTALLED_FONTS='false'
-UPDATE_INSTALLED_FONTS='false'
-DISPLAY_INSTALLED_FONTS='false'
-DISPLAY_ALL_FONTS='false'
+readonly RELEASE_FILE="$CACHE_DIR/release.txt"
+readonly ALL_FONTS_FILE="$CACHE_DIR/all_fonts.txt"
 
-## Directories
-TERMUX_DIR="$HOME/.termux"
-COLORS_DIR="$HOME/.termux/colors"
-DIRCOLORS_DIR="$HOME/.termux/dircolors"
-FONTS_DIR="$HOME/.termux/fonts"
-readonly DOWN_DIR="$TERMUX_DIR/cache"
-readonly NF_DIR="$DOWN_DIR"
-readonly FONT_RELEASES_DIR="$NF_DIR/releases"
-readonly RELEASE_FILE="$NF_DIR/release.txt"
-readonly ALL_FONTS_FILE="$NF_DIR/all_fonts.txt"
-readonly FONT_DIR="$FONTS_DIR"
+NEW_RELEASE_AVAILABLE=false
+KEEP_FONT_ARCHIVES=false
+INCLUDE_INSTALLED_FONTS=false
+UPDATE_INSTALLED_FONTS=false
+DISPLAY_INSTALLED_FONTS=false
+DISPLAY_ALL_FONTS=false
 
-## Banner
-banner () {
-    clear
+# -----------------------------------------------------------------------------
+# Utility functions
+# -----------------------------------------------------------------------------
+banner() {
+    clear 2>/dev/null || true
     echo "
     ${BLUE}┌──────────────────────────────────────────────────┐
     ${BLUE}│${RED}░▀█▀░█▀▀░█▀▄░█▄█░█░█░█░█${ORANGE}░░░░░${GREEN}█▀▀░▀█▀░█░█░█░░░█▀▀░░${BLUE}│
@@ -43,250 +64,306 @@ banner () {
     ${BLUE}"
 }
 
-## Script Termination
-exit_on_signal_SIGINT () {
-    { printf "\n\n%s\n" "    ${BLUE}[${RED}*${BLUE}] ${RED}Script interrupted." 2>&1; echo; reset_color; }
-    exit 0
-}
-
-exit_on_signal_SIGTERM () {
-    { printf "\n\n%s\n" "    ${BLUE}[${RED}*${BLUE}] ${RED}Script terminated." 2>&1; echo; reset_color; }
-    exit 0
-}
-
-trap exit_on_signal_SIGINT SIGINT
-trap exit_on_signal_SIGTERM SIGTERM
-
-## Reset terminal colors
 reset_color() {
-	tput sgr0   # reset attributes
-	tput op     # reset color
+    tput sgr0 2>/dev/null || true
+    tput op 2>/dev/null || true
     return
 }
 
-## Available color-schemes & fonts
-check_files () {
-    if [[ "$1" = colors ]]; then
-        colors=($(ls $COLORS_DIR))
-        echo ${#colors[@]}
-    elif [[ "$1" = dircolor ]]; then
-        dircolor=($(ls $DIRCOLORS_DIR))
-        echo ${#dircolor[@]}
-    elif [[ "$1" = fonts ]]; then
-        fonts=($(ls $FONTS_DIR))
-        echo ${#fonts[@]}
-    fi
-    return
+ensure_dirs() {
+    mkdir -p -- "$TERMUX_DIR" "$COLORS_DIR" "$DIRCOLORS_DIR" "$FONTS_DIR" "$CACHE_DIR" "$FONT_RELEASES_DIR"
 }
 
-total_colors=$(check_files colors)
-total_dircolors=$(check_files dircolor)
-total_fonts=$(check_files fonts)
+list_files() {
+    local dir="$1"
+    local path
+    FILES=()
 
-## Reload Settings
-reload_settings () {
-    case "${TERMUX__USER_ID:-}" in ''|*[!0-9]*|0[0-9]*) TERMUX__USER_ID=0;; esac
+    shopt -s nullglob
+    for path in "$dir"/*; do
+        if [[ -f "$path" ]]; then
+            FILES+=("$path")
+        fi
+    done
+    shopt -u nullglob
+}
+
+check_files() {
+    local kind="$1"
+    local dir=""
+    case "$kind" in
+        colors) dir="$COLORS_DIR" ;;
+        dircolor) dir="$DIRCOLORS_DIR" ;;
+        fonts) dir="$FONTS_DIR" ;;
+        *) echo 0; return 0 ;;
+    esac
+
+    list_files "$dir"
+    echo "${#FILES[@]}"
+}
+
+# -----------------------------------------------------------------------------
+# Reload functions
+# -----------------------------------------------------------------------------
+reload_settings() {
+    case "${TERMUX__USER_ID:-}" in
+        ''|*[!0-9]*|0[0-9]*)
+            TERMUX__USER_ID=0
+            ;;
+    esac
+
     echo "    ${BLUE}[${RED}*${BLUE}] ${MAGENTA}Reloading Settings..."
-    am broadcast --user "$TERMUX__USER_ID" -a "com.termux.app.reload_style" "com.termux" > /dev/null
-    { echo "    ${BLUE}[${RED}*${BLUE}] ${GREEN}Applied Successfully."; echo; }
-    return
+    am broadcast --user "$TERMUX__USER_ID" -a "com.termux.app.reload_style" "com.termux" >/dev/null 2>&1 || true
+    echo "    ${BLUE}[${RED}*${BLUE}] ${GREEN}Applied Successfully."
+    echo
 }
 
-## Reload Dircolors
-reload_dircolor () {
-    echo "    ${BLUE}[${RED}*${BLUE}] ${MAGENTA}Reloading Settings..."
-    eval "$(dircolors -b "$HOME"/.dircolors)" ;
-    { echo "    ${BLUE}[${RED}*${BLUE}] ${GREEN}Applied Successfully."; echo; }
-    return
+reload_dircolor() {
+    echo "    ${BLUE}[${RED}*${BLUE}] ${MAGENTA}Reloading Dircolors..."
+    eval "$(dircolors -b "$HOME/.dircolors" 2>/dev/null)"
+    echo "    ${BLUE}[${RED}*${BLUE}] ${GREEN}Applied Successfully."
+    echo
 }
 
-## Apply color-schemes
-apply_colors () {
-    local count=1
+# -----------------------------------------------------------------------------
+# Theme selection helpers
+# -----------------------------------------------------------------------------
+select_file_from_dir() {
+    local title="$1"
+    local dir="$2"
+    local target="$3"
+    local -a choices=()
+    local answer
+    local i
 
-    # List the color-schemes
-    color_schemes=($(ls $COLORS_DIR))
-    for colors in "${color_schemes[@]}"; do
-        colors_name=$(echo $colors)
-        echo ${ORANGE}"    [$count] ${colors_name%.*}"
-        count=$(($count+1))
+    list_files "$dir"
+    choices=("${FILES[@]}")
+
+    if (( ${#choices[@]} == 0 )); then
+        echo
+        echo "    ${BLUE}[${RED}!${BLUE}] ${RED}No files found in $dir"
+        echo
+        return 1
+    fi
+
+    echo "$title"
+    for i in "${!choices[@]}"; do
+        printf '    %b[%d] %s\n' "$ORANGE" "$((i + 1))" "${choices[$i]##*/}"
     done
 
-    # Read user selection
-    { echo; read -p ${BLUE}"    [${RED}Select Color Scheme (1 to $total_colors)${BLUE}]: ${GREEN}" answer; echo; }
+    echo
+    read -r -p "    ${BLUE}[${RED}Select Option${BLUE}]: ${GREEN}" answer
+    echo
 
-    # Apply color-scheme
-    if [[ (-n "$answer") && ("$answer" -le $total_colors) ]]; then
-        scheme=${color_schemes[(( answer - 1 ))]}
+    if [[ ! "$answer" =~ ^[0-9]+$ ]] || (( answer < 1 || answer > ${#choices[@]} )); then
+        echo -n "    ${BLUE}[${RED}!${BLUE}] ${RED}Back to menu."
+        echo
+        return 1
+    fi
+
+    local selected="${choices[$((answer - 1))]}"
+    ln -sfn -- "$selected" "$target"
+    return 0
+}
+
+# -----------------------------------------------------------------------------
+# Apply color schemes
+# -----------------------------------------------------------------------------
+apply_colors() {
+    local count=1
+    local file
+    local name
+
+    list_files "$COLORS_DIR"
+    if (( ${#FILES[@]} == 0 )); then
+        echo "    ${BLUE}[${RED}!${BLUE}] ${RED}No color schemes found."
+        return
+    fi
+
+    for file in "${FILES[@]}"; do
+        name="${file##*/}"
+        name="${name%.*}"
+        echo "${ORANGE}    [$count] $name"
+        count=$((count + 1))
+    done
+
+    echo
+    read -r -p "    ${BLUE}[${RED}Select Color Scheme (1 to ${#FILES[@]})${BLUE}]: ${GREEN}" answer
+    echo
+
+    if [[ "$answer" =~ ^[0-9]+$ ]] && (( answer >= 1 && answer <= ${#FILES[@]} )); then
+        local scheme_path="${FILES[$((answer - 1))]}"
         echo "    ${BLUE}[${RED}*${BLUE}] ${ORANGE}Applying Color Scheme..."
-        ln -sf $COLORS_DIR/$scheme $TERMUX_DIR/colors.properties
-        { reload_settings; reset_color; return; }
+        ln -sfn -- "$scheme_path" "$TERMUX_DIR/colors.properties"
+        reload_settings
+        reset_color
     else
         echo -n "    ${BLUE}[${RED}!${BLUE}] ${RED}Back to menu."
-        { echo; return; }
+        echo
     fi
-    return
 }
 
-## Apply dircolor-schemes
-apply_dircolor () {
+# -----------------------------------------------------------------------------
+# Apply dircolor schemes
+# -----------------------------------------------------------------------------
+apply_dircolor() {
     local count=1
+    local file
+    local name
 
-    # List the dircolor-schemes
-    dircolor_schemes=($(ls $DIRCOLORS_DIR))
-    for dircolor in "${dircolor_schemes[@]}"; do
-        dircolor_name=$(echo $dircolor)
-        echo ${ORANGE}"    [$count] ${dircolor_name%.*}"
-        count=$(($count+1))
+    list_files "$DIRCOLORS_DIR"
+    if (( ${#FILES[@]} == 0 )); then
+        echo "    ${BLUE}[${RED}!${BLUE}] ${RED}No dircolor schemes found."
+        return
+    fi
+
+    for file in "${FILES[@]}"; do
+        name="${file##*/}"
+        name="${name%.*}"
+        echo "${ORANGE}    [$count] $name"
+        count=$((count + 1))
     done
 
-    # Read user selection
-    { echo; read -p ${BLUE}"    [${RED}Select Dircolor Scheme (1 to $total_dircolors)${BLUE}]: ${GREEN}" answer; echo; }
+    echo
+    read -r -p "    ${BLUE}[${RED}Select Dircolor Scheme (1 to ${#FILES[@]})${BLUE}]: ${GREEN}" answer
+    echo
 
-    # Apply dircolor-scheme
-    if [[ (-n "$answer") && ("$answer" -le $total_dircolors) ]]; then
-        scheme=${dircolor_schemes[(( answer - 1 ))]}
-        echo "    ${BLUE}[${RED}*${BLUE}] ${ORANGE}Applying Color Scheme..."
-        ln -sf $DIRCOLORS_DIR/$scheme $HOME/.dircolors
-        { reload_dircolor; reset_color; return; }
+    if [[ "$answer" =~ ^[0-9]+$ ]] && (( answer >= 1 && answer <= ${#FILES[@]} )); then
+        local scheme_path="${FILES[$((answer - 1))]}"
+        echo "    ${BLUE}[${RED}*${BLUE}] ${ORANGE}Applying Dircolor Scheme..."
+        ln -sfn -- "$scheme_path" "$HOME/.dircolors"
+        reload_dircolor
+        reset_color
     else
         echo -n "    ${BLUE}[${RED}!${BLUE}] ${RED}Back to menu."
-        { echo; return; }
+        echo
     fi
-    return
 }
 
-## Apply fonts
-apply_fonts () {
+# -----------------------------------------------------------------------------
+# Apply fonts
+# -----------------------------------------------------------------------------
+apply_fonts() {
     local count=1
+    local file
+    local name
 
-    # List fonts
-    fonts_list=($(ls $FONTS_DIR))
-    for fonts in "${fonts_list[@]}"; do
-        fonts_name=$(echo $fonts)
-        echo ${ORANGE}"    [$count] ${fonts_name%.*}"
-        count=$(($count+1))
+    list_files "$FONTS_DIR"
+    if (( ${#FILES[@]} == 0 )); then
+        echo "    ${BLUE}[${RED}!${BLUE}] ${RED}No fonts found."
+        return
+    fi
+
+    for file in "${FILES[@]}"; do
+        name="${file##*/}"
+        name="${name%.*}"
+        echo "${ORANGE}    [$count] $name"
+        count=$((count + 1))
     done
 
-    # Read user selection
-    { echo; read -p ${BLUE}"    [${RED}Select font (1 to $total_fonts)${BLUE}]: ${GREEN}" answer; echo; }
+    echo
+    read -r -p "    ${BLUE}[${RED}Select font (1 to ${#FILES[@]})${BLUE}]: ${GREEN}" answer
+    echo
 
-    # Apply fonts
-    if [[ (-n "$answer") && ("$answer" -le $total_fonts) ]]; then
-        font_ttf=${fonts_list[(( answer - 1 ))]}
-        echo "    ${BLUE}[${RED}*${BLUE}] ${ORANGE}Applying Fonts..."
-        ln -sf $FONTS_DIR/$font_ttf $TERMUX_DIR/font.ttf
-        { reload_settings; reset_color; return; }
+    if [[ "$answer" =~ ^[0-9]+$ ]] && (( answer >= 1 && answer <= ${#FILES[@]} )); then
+        local font_path="${FILES[$((answer - 1))]}"
+        echo "    ${BLUE}[${RED}*${BLUE}] ${ORANGE}Applying Font..."
+        ln -sfn -- "$font_path" "$TERMUX_DIR/font.ttf"
+        reload_settings
+        reset_color
     else
         echo -n "    ${BLUE}[${RED}!${BLUE}] ${RED}Back to menu."
-        { reset_color; echo; return; }
+        echo
+        reset_color
     fi
-    return
 }
 
-## Random style
-random_style () {
+# -----------------------------------------------------------------------------
+# Random style
+# -----------------------------------------------------------------------------
+random_style() {
+    local -a schemes=()
+    local random_scheme
+
+    list_files "$COLORS_DIR"
+    schemes=("${FILES[@]}")
+
+    if (( ${#schemes[@]} == 0 )); then
+        echo "    ${BLUE}[${RED}!${BLUE}] ${RED}No color schemes found."
+        return
+    fi
+
+    random_scheme="${schemes[$((RANDOM % ${#schemes[@]}))]}"
     echo "    ${BLUE}[${RED}*${BLUE}] ${ORANGE}Setting Random Style..."
-    random_scheme=$(ls $COLORS_DIR | shuf -n 1)
-    { ln -sf $COLORS_DIR/$random_scheme $TERMUX_DIR/colors.properties; }
-    { reload_settings; reset_color; return; }
+    ln -sfn -- "$random_scheme" "$TERMUX_DIR/colors.properties"
+    reload_settings
+    reset_color
 }
 
-## Download font
-download_fonts () {
-    info() {
-        printf "\n%s\n" "$1"
-    }
-
-    title() {
-        printf "\n%b\n" "$1"
-    }
-
-    confirm() {
-        printf "\n%b\n" "$1"
-    }
-
-    alert() {
-        printf "\n%b\n" "$1"
-    }
-
-    error() {
-        alert "$1" >&2
-        { echo; return; }
-    }
+# -----------------------------------------------------------------------------
+# Nerd Fonts downloader
+# -----------------------------------------------------------------------------
+download_fonts() {
+    info() { printf '%b\n' "$1"; }
+    title() { printf '%b\n' "$1"; }
+    confirm() { printf '%b\n' "$1"; }
+    alert() { printf '%b\n' "$1" >&2; }
+    error_msg() { printf '%b\n' "$1" >&2; return 1; }
 
     create_dirs() {
-        mkdir -p "$FONT_DIR"
-        mkdir -p "$DOWN_DIR"
-        mkdir -p "$FONT_RELEASES_DIR"
+        mkdir -p -- "$TERMUX_DIR" "$COLORS_DIR" "$DIRCOLORS_DIR" "$FONTS_DIR" "$CACHE_DIR" "$FONT_RELEASES_DIR"
     }
 
     verify_internet_access() {
-        if ! curl --silent --head --fail "$NERDFONTSAPI" > /dev/null; then
-            alert "Couldn't connect to the Nerd Fonts API." >&2
-            error "Most likely the internet connection is not working."
+        if ! curl --silent --head --fail "$NERDFONTSAPI" >/dev/null 2>&1; then
+            alert "Couldn't connect to the Nerd Fonts API."
+            error_msg "Most likely the internet connection is not working."
+            return 1
         fi
     }
 
     check_dependencies() {
-        verify_internet_access
+        command -v curl >/dev/null 2>&1 || { error_msg "curl is required."; return 1; }
+        command -v tar >/dev/null 2>&1 || { error_msg "tar is required."; return 1; }
         create_dirs
-    }
-
-    erase_line() {
-        printf "\033[1A\033[2K"
-    }
-
-    erase_char() {
-        printf "\033[1D\033[K"
-    }
-
-    readonly ANIMATION=('' '' '' '' '' '')
-    readonly FRAME_INTERVAL=0.25
-
-    play_loading_animation_loop() {
-        while true; do
-            for frame in "${ANIMATION[@]}"; do
-                printf "\033[1D\033[K"
-                printf "%s" "${frame}"
-                sleep "$FRAME_INTERVAL"
-            done
-        done
-    }
-
-    start_loading_animation() {
-        tput civis
-        play_loading_animation_loop &
-        LOADING_ANIMATION_PID="${!}"
-    }
-
-    stop_loading_animation() {
-        erase_char
-        kill "${LOADING_ANIMATION_PID}" &> /dev/null
-        tput cnorm
+        verify_internet_access || return 1
     }
 
     get_latest_release_version() {
-        readonly RELEASE=$(curl --silent "$NERDFONTSAPI/releases/latest" |
-            awk -v RS=',' -F'"' '/tag_name/ {print $4}')
+        local tag
+        tag=$(curl --silent --fail --location "$NERDFONTSAPI/releases/latest" 2>/dev/null |
+            awk -v RS=',' -F'"' '/tag_name/ {print $4}' | head -n 1)
+
+        if [[ -z "$tag" ]]; then
+            error_msg "Could not determine the latest Nerd Fonts release."
+            return 1
+        fi
+
         if [[ -f "$RELEASE_FILE" ]]; then
-            local current_release=$(cat "$RELEASE_FILE")
-            if [[ "$current_release" != "$RELEASE" ]]; then
-                NEW_RELEASE_AVAILABLE='true'
+            local current_release
+            current_release=$(cat "$RELEASE_FILE" 2>/dev/null || true)
+            if [[ -n "$current_release" && "$current_release" != "$tag" ]]; then
+                NEW_RELEASE_AVAILABLE=true
             fi
         fi
-        echo "$RELEASE" > "$RELEASE_FILE"
+
+        printf '%s\n' "$tag" > "$RELEASE_FILE"
+        printf '%s\n' "$tag"
     }
 
     get_font_release_file() {
-        echo "$FONT_RELEASES_DIR/${1}_release.txt"
+        printf '%s\n' "$FONT_RELEASES_DIR/${1}_release.txt"
     }
 
     is_latest_version() {
-        local font_release_file="$(get_font_release_file "$1")"
+        local font_name="$1"
+        local font_release_file
+        font_release_file="$(get_font_release_file "$font_name")"
+
         if [[ -f "$font_release_file" ]]; then
-            local font_release_version=$(cat "$font_release_file")
-            if [[ "$font_release_version" == "$RELEASE" ]]; then
+            local version
+            version=$(cat "$font_release_file" 2>/dev/null || true)
+            if [[ "$version" == "$RELEASE" ]]; then
                 return 0
             fi
         fi
@@ -295,41 +372,59 @@ download_fonts () {
 
     create_all_fonts_file() {
         local font_list
-        font_list=$(curl -s "$NERDFONTSAPI/contents/patched-fonts?ref=master" |
+        font_list=$(curl --silent --fail --location "$NERDFONTSAPI/contents/patched-fonts?ref=master" 2>/dev/null |
             awk -v RS=',' -F'"' '/name/ {print $4}')
-        echo "$font_list" > "$ALL_FONTS_FILE"
+
+        if [[ -z "$font_list" ]]; then
+            error_msg "Failed to fetch the Nerd Fonts catalog."
+            return 1
+        fi
+
+        printf '%s\n' "$font_list" > "$ALL_FONTS_FILE"
     }
 
     get_all_fonts() {
         if [[ ! -f "$ALL_FONTS_FILE" || "$NEW_RELEASE_AVAILABLE" == "true" ]]; then
-            create_all_fonts_file
+            create_all_fonts_file || return 1
         fi
+
         ALL_FONTS=()
-        mapfile -t ALL_FONTS < "$ALL_FONTS_FILE"
+        while IFS= read -r line; do
+            [[ -n "$line" ]] && ALL_FONTS+=("$line")
+        done < "$ALL_FONTS_FILE"
     }
 
     get_installed_fonts() {
-        local total_fonts
-        local installed_user_fonts=("$FONT_DIR"/*)
-        # leave only the basenames
-        installed_user_fonts=("${installed_user_fonts[@]##*/}")
-        # filter Nerd Fonts
+        local -a installed_user_fonts=()
+        local font
+        local file
+
+        shopt -s nullglob
+        installed_user_fonts=("$FONTS_DIR"/*)
+        shopt -u nullglob
+
         INSTALLED_FONTS=()
+        for file in "${installed_user_fonts[@]}"; do
+            installed_user_fonts+=("${file##*/}")
+        done
+
+        local -a basenames=()
+        for file in "${installed_user_fonts[@]}"; do
+            basenames+=("${file##*/}")
+        done
+
         for font in "${ALL_FONTS[@]}"; do
-            if [[ " ${installed_user_fonts[*]} " == *" $font "* ]]; then
+            if printf '%s\n' "${basenames[@]}" 2>/dev/null | grep -Fxq "$font"; then
                 INSTALLED_FONTS+=("$font")
             fi
         done
     }
 
     filter_installed_fonts() {
+        FONT_OPTIONS=()
         if [[ "$INCLUDE_INSTALLED_FONTS" == "false" ]]; then
-            FONT_OPTIONS=()
             for font in "${ALL_FONTS[@]}"; do
-                # add the font even if it's installed but the font_release_file
-                # doesn't exists or the version is not the latest
-                if [[ " ${INSTALLED_FONTS[*]} " != *" $font "* ]] ||
-                    ! is_latest_version "$font"; then
+                if ! printf '%s\n' "${INSTALLED_FONTS[@]}" 2>/dev/null | grep -Fxq "$font" || ! is_latest_version "$font"; then
                     FONT_OPTIONS+=("$font")
                 fi
             done
@@ -339,122 +434,89 @@ download_fonts () {
     }
 
     download_font() {
-        local opts=("--location" "--remote-header-name" "--remote-name")
-        opts+=("--silent")
-        echo -n "Downloading $1...  "
-        trap stop_loading_animation SIGINT
-        start_loading_animation
-        curl "${opts[@]}" "$NERDFONTSREPO/releases/download/$RELEASE/$1.tar.xz"
-        stop_loading_animation
-        total_fonts
-        confirm "Done"
+        local font_name="$1"
+        local archive_path="$CACHE_DIR/${font_name}.tar.xz"
+        local url="${NERDFONTSREPO}/releases/download/${RELEASE}/${font_name}.tar.xz"
+
+        echo -n "Downloading $font_name... "
+        curl --fail --location --silent --show-error --output "$archive_path" "$url" || {
+            echo "failed"
+            return 1
+        }
+        echo "done"
     }
 
     extract_font() {
-        echo -n "Installing $1... "
-        mkdir -p "$FONT_DIR/$1"
-        tar -xf "$1.tar.xz" -C "$FONT_DIR"
-        rm -rf "$FONT_DIR/$1"
-        rm -f "$FONT_DIR/LICENSE"
-        rm -f "$FONT_DIR/LICENSE.txt"
-        rm -f "$FONT_DIR/OFL.txt"
-        rm -f "$FONT_DIR/README.md"
-        total_fonts
-        confirm "Done"
+        local font_name="$1"
+        local archive_path="$CACHE_DIR/${font_name}.tar.xz"
+        local install_dir="$FONTS_DIR/$font_name"
+
+        echo -n "Installing $font_name... "
+        mkdir -p -- "$install_dir"
+        tar -xf "$archive_path" -C "$FONTS_DIR" || {
+            echo "failed"
+            return 1
+        }
+
+        rm -rf -- "$install_dir"
+        rm -f -- "$FONTS_DIR/LICENSE"
+        rm -f -- "$FONTS_DIR/LICENSE.txt"
+        rm -f -- "$FONTS_DIR/OFL.txt"
+        rm -f -- "$FONTS_DIR/README.md"
+
+        echo "done"
     }
 
     save_font_release() {
-        echo "$RELEASE" > "$(get_font_release_file "$1")"
+        local font_name="$1"
+        printf '%s\n' "$RELEASE" > "$(get_font_release_file "$font_name")"
     }
 
     remove_font_archives() {
         echo -n "Removing downloaded font archives... "
         for font in "${SELECTED_FONTS[@]}"; do
-            rm -f "$DOWN_DIR/$font.tar.xz"
+            rm -f -- "$CACHE_DIR/$font.tar.xz"
         done
-        confirm "Done"
+        echo "done"
     }
 
     install_font() {
-        pushd "$DOWN_DIR" > /dev/null
-        # Remove the archive if it exists due to curl not having overwrite option
-        rm -f "$DOWN_DIR/$1.tar.xz"
-        download_font "$1" &&
-            extract_font "$1" &&
-            save_font_release "$1"
-        popd > /dev/null
+        local font_name="$1"
+        rm -f -- "$CACHE_DIR/$font_name.tar.xz"
+        download_font "$font_name" && extract_font "$font_name" && save_font_release "$font_name"
     }
 
     direct_install() {
-        for font_name in $(echo "$1" | tr ',' ' '); do
-            if [[ " ${ALL_FONTS[*]} " == *" $font_name "* ]]; then
+        local input="$1"
+        local font_name
+        local -a names=()
+
+        read -r -a names <<< "$(tr ',' ' ' <<< "$input")"
+
+        for font_name in "${names[@]}"; do
+            if printf '%s\n' "${ALL_FONTS[@]}" | grep -Fxq "$font_name"; then
                 SELECTED_FONTS+=("$font_name")
             else
-                error "Invalid font name: $font_name. Try again."
+                error_msg "Invalid font name: $font_name. Try again."
             fi
         done
-    }
-
-    # TODO: complete the uninstall functions
-    uninstall_fonts() {
-        get_font_dir
-        local -a fonts_to_uninstall
-        for font_name in $(echo "$1" | tr ',' ' '); do
-            if [[ -d "$FONT_DIR/$font_name" ]]; then
-                fonts_to_uninstall+=("$font_name")
-            else
-                error "Font $font_name is not installed."
-            fi
-        done
-        if [[ ${#fonts_to_uninstall[@]} -ne 0 ]]; then
-            for font in "${fonts_to_uninstall[@]}"; do
-                echo -n "Uninstalling $font... "
-                rm -rf "${FONT_DIR:?}/$font"
-                rm -f "$(get_font_release_file "$font")"
-                confirm "Done"
-            done
-        fi
-    }
-
-    post_install() {
-        if [[ "$KEEP_FONT_ARCHIVES" == "false" ]]; then
-            remove_font_archives
-        else
-            info "The downloaded font archives can be found in $DOWN_DIR"
-        fi
-        return 1
-    }
-
-    update_installed_fonts() {
-        get_installed_fonts
-        if [[ ${#INSTALLED_FONTS[@]} -ne 0 ]]; then
-            for font in "${INSTALLED_FONTS[@]}"; do
-                if ! is_latest_version "$font"; then
-                    SELECTED_FONTS+=("$font")
-                fi
-            done
-            if [[ ${#SELECTED_FONTS[@]} -eq 0 ]]; then
-                confirm "All installed Nerd Fonts are up to date."
-                return
-            fi
-            info "Updating installed Nerd Fonts: ${SELECTED_FONTS[*]}"
-        else
-            error "No installed Nerd Fonts found."
-        fi
     }
 
     display_installed_fonts() {
-        if [[ ${#INSTALLED_FONTS[@]} -eq 0 ]]; then
+        if (( ${#INSTALLED_FONTS[@]} == 0 )); then
             return 1
         fi
+
         title "Installed Nerd Fonts:"
         for font in "${INSTALLED_FONTS[@]}"; do
-            local font_release_file="$(get_font_release_file "$font")"
+            local font_release_file
+            font_release_file="$(get_font_release_file "$font")"
             if [[ -f "$font_release_file" ]]; then
-                local font_release_version=$(cat "$font_release_file")
-                printf "%s - %s\n" "$font" "$font_release_version"
+                local version
+                version=$(cat "$font_release_file" 2>/dev/null || true)
+                printf '%s - %s\n' "$font" "$version"
             else
-                printf "%s - unknown version\n" "$font"
+                printf '%s - unknown version\n' "$font"
             fi
         done
     }
@@ -465,14 +527,15 @@ download_fonts () {
     }
 
     display_font_menu() {
-        local term_width=$(stty size | cut -d ' ' -f 2)
-        title "Nerd Fonts ${RELEASE}:\n"
-        (
+        local term_width
+        term_width=$(stty size 2>/dev/null | cut -d ' ' -f 2 || echo 80)
+        title "Nerd Fonts ${RELEASE}:"
+        {
             for i in "${!FONT_OPTIONS[@]}"; do
-                printf "%d) %s\n" "$((i + 1))" "${FONT_OPTIONS[$i]}"
+                printf '%d) %s\n' "$((i + 1))" "${FONT_OPTIONS[$i]}"
             done
-            printf "q) Quit\n"
-        ) | pr -3 -t -w "$term_width"
+            printf 'q) Quit\n'
+        } | pr -3 -t -w "$term_width"
     }
 
     parse_range() {
@@ -480,14 +543,17 @@ download_fonts () {
             alert "Invalid input format: $1. Expected format: X-Y."
             return 1
         fi
-        local -a range
-        IFS='-' read -ra range <<< "$1"
-        local range_start=${range[0]}
-        local range_end=${range[1]}
+
+        local -a range=()
+        IFS='-' read -r -a range <<< "$1"
+        local range_start="${range[0]}"
+        local range_end="${range[1]}"
+        local i
+
         for ((i = range_start; i <= range_end; i++)); do
             local index=$((i - 1))
-            if ((index >= 0 && index < ${#FONT_OPTIONS[@]})); then
-                SELECTED_FONTS[index]=${FONT_OPTIONS[index]}
+            if (( index >= 0 && index < ${#FONT_OPTIONS[@]} )); then
+                SELECTED_FONTS+=("${FONT_OPTIONS[$index]}")
             else
                 alert "Invalid option: $i. Try again."
                 return 1
@@ -498,43 +564,44 @@ download_fonts () {
     handle_input() {
         while true; do
             local choices
-            echo -e "\n"
-            read -rp "Enter font number(s) (e.g. 1,2,3 or 1-3 or 1,3-5): " choices
-            for choice in $(echo "$choices" | tr ',' ' '); do
-                if [[ $choice == "q" ]]; then
+            echo
+            read -r -p "Enter font number(s) (e.g. 1,2,3 or 1-3 or 1,3-5): " choices
+            echo
+
+            for choice in $(printf '%s' "$choices" | tr ',' ' '); do
+                if [[ "$choice" == "q" ]]; then
                     confirm "Goodbye!"
-                    { echo; banner; return; }
-                # Choice is a range (e.g. 1-3)
-                elif [[ $choice == *-* ]]; then
+                    echo
+                    banner
+                    return
+                elif [[ "$choice" == *-* ]]; then
                     parse_range "$choice" || continue 2
-                elif ((choice >= 1 && choice <= ${#FONT_OPTIONS[@]})); then
-                    local index=$((choice - 1))
-                    SELECTED_FONTS[index]=${FONT_OPTIONS[index]}
+                elif [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#FONT_OPTIONS[@]} )); then
+                    SELECTED_FONTS+=("${FONT_OPTIONS[$((choice - 1))]}")
                 else
                     alert "Invalid option: $choice. Try again."
                     continue 2
                 fi
             done
+
             title "Selected Nerd Fonts: ${SELECTED_FONTS[*]}"
             break
         done
     }
 
-    # TODO: add more modular options for installing fonts
     menu_install() {
         get_installed_fonts
         filter_installed_fonts
-
         banner
-        display_installed_fonts
+        display_installed_fonts || true
         display_font_menu
         handle_input
     }
 
     main() {
-        check_dependencies
-        get_latest_release_version
-        get_all_fonts
+        check_dependencies || return 1
+        RELEASE=$(get_latest_release_version) || return 1
+        get_all_fonts || return 1
 
         if [[ "$DISPLAY_INSTALLED_FONTS" == "true" ]]; then
             get_installed_fonts
@@ -551,86 +618,197 @@ download_fonts () {
 
         SELECTED_FONTS=()
         if [[ "$UPDATE_INSTALLED_FONTS" == "true" ]]; then
-            update_installed_fonts
-        elif [[ -n "$FONTNAMES" ]]; then
+            get_installed_fonts
+            if (( ${#INSTALLED_FONTS[@]} == 0 )); then
+                error_msg "No installed Nerd Fonts found."
+                return 1
+            fi
+
+            for font in "${INSTALLED_FONTS[@]}"; do
+                if ! is_latest_version "$font"; then
+                    SELECTED_FONTS+=("$font")
+                fi
+            done
+
+            if (( ${#SELECTED_FONTS[@]} == 0 )); then
+                confirm "All installed Nerd Fonts are up to date."
+                return 0
+            fi
+
+            info "Updating installed Nerd Fonts: ${SELECTED_FONTS[*]}"
+        elif [[ -n "${FONTNAMES:-}" ]]; then
             direct_install "$FONTNAMES"
         else
             menu_install
         fi
 
-        if ((${#SELECTED_FONTS[@]} > 0)); then
-            for i in "${SELECTED_FONTS[@]}"; do
-                install_font "$i"
+        if (( ${#SELECTED_FONTS[@]} > 0 )); then
+            for font in "${SELECTED_FONTS[@]}"; do
+                install_font "$font" || return 1
             done
-            post_install
+
+            if [[ "$KEEP_FONT_ARCHIVES" == "false" ]]; then
+                remove_font_archives
+            else
+                info "The downloaded font archives can be found in $CACHE_DIR"
+            fi
         else
-            error "No fonts were selected, back to menu."
+            error_msg "No fonts were selected, back to menu."
         fi
     }
 
     main "$@"
 }
 
-## Import files
-import_files () {
-    echo "    ${BLUE}[${RED}L${BLUE}] ${ORANGE}Local File (Enter path to file)
-    ${BLUE}[${RED}I${BLUE}] ${ORANGE}Internet File (Enter File URL)"
-    { echo; read -p ${BLUE}"    [${RED}Select Option${BLUE}]: ${GREEN}" option; echo; }
+# -----------------------------------------------------------------------------
+# Import local or remote theme file
+# -----------------------------------------------------------------------------
+import_files() {
+    local temp_file
+    temp_file=$(mktemp "$TERMUX_DIR/tmp/termux_XXXXXXXXXX.properties" 2>/dev/null || mktemp "/tmp/termux_XXXXXXXXXX.properties")
 
-    temp_file=$(mktemp $PREFIX/tmp/termux_XXXXXXXXXX.properties)
+    echo "    ${BLUE}[${RED}L${BLUE}] ${ORANGE}Local File (Enter path to file)"
+    echo "    ${BLUE}[${RED}I${BLUE}] ${ORANGE}Internet File (Enter File URL)"
+    echo
+    read -r -p "    ${BLUE}[${RED}Select Option${BLUE}]: ${GREEN}" option
+    echo
 
-    if [[ "$option" =~ ^[l/L/i/I]$ ]]; then
-        if [[ "$option" =~ ^[l/L]$ ]]; then
-            { read -p ${BLUE}"    [${RED}Enter/Paste Path To Color-scheme${BLUE}]: ${GREEN}" file_path; echo; }
-            cp $file_path $TERMUX_DIR/colors
-            { reload_settings; reset_color; return; }
-        elif [[ "$option" =~ ^[i/I]$ ]]; then
-            { read -p ${BLUE}"    [${RED}Enter Color-scheme URL${BLUE}]: ${GREEN}" file_link; echo; }
-            wget -o $PREFIX/tmp/log -O $temp_file $file_link
-            cp $temp_file $TERMUX_DIR/colors
-            { reload_settings; reset_color; return; }
+    if [[ "$option" =~ ^[lL]$ ]]; then
+        local file_path
+        local basename
+
+        read -r -p "    ${BLUE}[${RED}Enter/Paste Path To Color-scheme${BLUE}]: ${GREEN}" file_path
+        echo
+
+        if [[ ! -f "$file_path" ]]; then
+            echo "    ${BLUE}[${RED}!${BLUE}] ${RED}File not found: $file_path"
+            return 1
         fi
-    else
-        echo -n "    ${BLUE}[${RED}!${BLUE}] ${RED}Back to menu."
-        { reset_color; echo; return; }
+
+        basename="${file_path##*/}"
+        cp -- "$file_path" "$COLORS_DIR/$basename"
+        ln -sfn -- "$COLORS_DIR/$basename" "$TERMUX_DIR/colors.properties"
+        reload_settings
+        reset_color
+        return 0
     fi
+
+    if [[ "$option" =~ ^[iI]$ ]]; then
+        local file_link
+        local basename
+
+        read -r -p "    ${BLUE}[${RED}Enter Color-scheme URL${BLUE}]: ${GREEN}" file_link
+        echo
+
+        if ! curl --fail --silent --show-error --output "$temp_file" "$file_link"; then
+            echo "    ${BLUE}[${RED}!${BLUE}] ${RED}Failed to download the color-scheme."
+            rm -f -- "$temp_file"
+            return 1
+        fi
+
+        basename="${file_link##*/}"
+        if [[ -z "$basename" || "$basename" == "http:" || "$basename" == "https:" ]]; then
+            basename="imported_theme.properties"
+        fi
+
+        cp -- "$temp_file" "$COLORS_DIR/$basename"
+        ln -sfn -- "$COLORS_DIR/$basename" "$TERMUX_DIR/colors.properties"
+        reload_settings
+        reset_color
+        rm -f -- "$temp_file"
+        return 0
+    fi
+
+    echo -n "    ${BLUE}[${RED}!${BLUE}] ${RED}Back to menu."
+    echo
+    reset_color
+    return 1
 }
 
-## Main menu
-# TODO: overhaul the TUI maybe someday
-until [[ "$REPLY" =~ ^[q/Q]$ ]]; do
-	active_color=`readlink $TERMUX_DIR/colors.properties | grep -o -E -e '(/[^/]+){2}$'`
-	active_dircolor=`readlink $HOME/.dircolors | grep -o -E -e '(/[^/]+){2}$'`
-	active_font=`readlink $TERMUX_DIR/font.ttf | grep -o -E -e '(/[^/]+){2}$'`
+# -----------------------------------------------------------------------------
+# Main menu
+# -----------------------------------------------------------------------------
+ensure_dirs
+
+total_colors=$(check_files colors)
+total_dircolors=$(check_files dircolor)
+total_fonts=$(check_files fonts)
+
+until [[ "${REPLY:-}" =~ ^[qQ]$ ]]; do
+    active_color=""
+    active_dircolor=""
+    active_font=""
+
+    if [[ -L "$TERMUX_DIR/colors.properties" ]]; then
+        active_color=$(readlink "$TERMUX_DIR/colors.properties" 2>/dev/null || true)
+        active_color="${active_color##*/}"
+        active_color="${active_color%.*}"
+    fi
+
+    if [[ -L "$HOME/.dircolors" ]]; then
+        active_dircolor=$(readlink "$HOME/.dircolors" 2>/dev/null || true)
+        active_dircolor="${active_dircolor##*/}"
+        active_dircolor="${active_dircolor%.*}"
+    fi
+
+    if [[ -L "$TERMUX_DIR/font.ttf" ]]; then
+        active_font=$(readlink "$TERMUX_DIR/font.ttf" 2>/dev/null || true)
+        active_font="${active_font##*/}"
+        active_font="${active_font%.*}"
+    fi
+
+    [[ -n "$active_color" ]] || active_color="none"
+    [[ -n "$active_dircolor" ]] || active_dircolor="none"
+    [[ -n "$active_font" ]] || active_font="none"
+
     banner
     echo "
-    ${BLUE}[${RED}C${BLUE}] ${GREEN}Colors ($total_colors) (${CYAN}${active_color%.*}${GREEN})
-    ${BLUE}[${RED}L${BLUE}] ${GREEN}Dircolors ($total_dircolors) (${CYAN}${active_dircolor%.*}${GREEN})
-    ${BLUE}[${RED}F${BLUE}] ${GREEN}Fonts ($total_fonts) (${CYAN}${active_font%.*}${GREEN})
+    ${BLUE}[${RED}C${BLUE}] ${GREEN}Colors ($total_colors) (${CYAN}${active_color}${GREEN})
+    ${BLUE}[${RED}L${BLUE}] ${GREEN}Dircolors ($total_dircolors) (${CYAN}${active_dircolor}${GREEN})
+    ${BLUE}[${RED}F${BLUE}] ${GREEN}Fonts ($total_fonts) (${CYAN}${active_font}${GREEN})
     ${BLUE}[${RED}R${BLUE}] ${GREEN}Random
     ${BLUE}[${RED}D${BLUE}] ${GREEN}Download
     ${BLUE}[${RED}I${BLUE}] ${GREEN}Import
     ${BLUE}[${RED}Q${BLUE}] ${GREEN}Quit
     "
 
-    { read -p ${BLUE}"    [${RED}Select Option${BLUE}]: ${GREEN}"; echo; }
+    read -r -p "    ${BLUE}[${RED}Select Option${BLUE}]: ${GREEN}" REPLY
+    echo
 
-    if [[ "$REPLY" =~ ^[c/C/l/L/f/F/r/R/d/D/i/I/q/Q]$ ]]; then      #validate input
-        if [[ "$REPLY" =~ ^[c/C]$ ]]; then
+    case "${REPLY^^}" in
+        C)
             apply_colors
-        elif [[ "$REPLY" =~ ^[l/L]$ ]]; then
+            ;;
+        L)
             apply_dircolor
-        elif [[ "$REPLY" =~ ^[f/F]$ ]]; then
+            ;;
+        F)
             apply_fonts
-        elif [[ "$REPLY" =~ ^[r/R]$ ]]; then
+            ;;
+        R)
             random_style
-        elif [[ "$REPLY" =~ ^[d/D]$ ]]; then
+            ;;
+        D)
             download_fonts
-        elif [[ "$REPLY" =~ ^[i/I]$ ]]; then
+            ;;
+        I)
             import_files
-        fi
-    else
-        echo -n "    ${BLUE}[${RED}!${BLUE}] ${RED}Invalid Option, Try Again."
-    fi
+            ;;
+        Q)
+            ;;
+        *)
+            echo -n "    ${BLUE}[${RED}!${BLUE}] ${RED}Invalid Option, Try Again."
+            echo
+            ;;
+    esac
+
+    total_colors=$(check_files colors)
+    total_dircolors=$(check_files dircolor)
+    total_fonts=$(check_files fonts)
 done
-{ echo "    ${BLUE}[${RED}*${BLUE}] ${RED}Bye Bye, Have A Nice Day!"; echo; reset_color; clear; exit 0; }
+
+echo "    ${BLUE}[${RED}*${BLUE}] ${RED}Bye Bye, Have A Nice Day!"
+echo
+reset_color
+clear
+exit 0

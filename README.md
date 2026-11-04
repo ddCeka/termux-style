@@ -30,9 +30,21 @@ cd termux-style
 # And follow the steps, it'll be installed on your system.
 ```
 
+### Dependencies
+```
+- curl
+- widget
+- jq
+- tar
+- ncurses-utils
+- coreutils
+```
+
 ### Run
 
 Run `style` & select the right option -
+
+#### Classic version
 
 ```bash
 $ style
@@ -52,6 +64,28 @@ $ style
     [Q] Quit
 
     [Select Option]:
+```
+
+#### Simple version
+
+```bash
+┌──────────────────────────────────────────┐
+│               TERMUX STYLE               │
+└──────────────────────────────────────────┘
+
+Colors:    /data/data/com.termux/files/home/.termux/colors/currently active theme.properties
+Font:      /data/data/com.termux/files/home/.termux/fonts/currently active font.ttf
+Dircolors: /data/data/com.termux/files/home/.termux/dircolors/currently active dircolor.dircolors
+
+  1) Apply a color scheme
+  2) Apply a font                                                   
+  3) Apply a dircolors scheme
+  4) Random color and font
+  5) Import a color scheme
+  6) Download a Nerd Font
+  q) Quit
+
+Choose an option:
 ```
 
 ### Features

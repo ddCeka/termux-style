@@ -90,7 +90,7 @@ Choose an option:
 
 ### Features
 
-+ 1000 color-schemes.
++ 950+ color-schemes.
 + 21 premade dircolors color-schemes.
 + 20 Nerd patched fonts and more.
 + Randomly change color-schemes.

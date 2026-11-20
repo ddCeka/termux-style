@@ -91,7 +91,7 @@ Choose an option:
 ### Features
 
 + 1100+ color-schemes.
-+ 21 premade dircolors color-schemes.
++ 22 premade dircolors color-schemes.
 + 20 Nerd patched fonts and more.
 + Randomly change color-schemes.
 + Download font from [NerdFont repo](https://github.com/ryanoasis/nerd-fonts).
